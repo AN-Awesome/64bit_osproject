@@ -22,18 +22,13 @@ BOOL kWaitForACKAndPutOtherScanCode(void) {
     BOOL bResult = FALSE;
 
     for(j=0; j<100; j++) {
-        for(i=0; i<0xFFFF; i++) {
-            if(kIsOutputBufferFull() == TRUE) break;
-        }
-
-    // Output buffer data ACK
-    bData = kInPortByte(0x60);
-    if(bData == 0xFA) {
-        bResult = TRUE;
-        break;
-    }
-    // NOT ACK = Convert to ASCII code
-    else kConvertScanCodeAndPutQueue(bData);
+        for(i=0; i<0xFFFF; i++) if(kIsOutputBufferFull() == TRUE) break;
+        // Output buffer data ACK
+        bData = kInPortByte(0x60);
+        if(bData == 0xFA) {
+            bResult = TRUE;
+            break;
+        } else kConvertScanCodeAndPutQueue(bData);  // NOT ACK = Convert to ASCII code
     }
     return bResult;
 }

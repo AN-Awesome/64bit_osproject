@@ -1,11 +1,17 @@
 #include "Types.h"
 #include "AssemblyUtility.h"
 #include "Keyboard.h"
-#inculde "Queue.h"
+#include "Queue.h"
 
 BOOL kIsOutputBufferFull(void) {
     // 1: Input Data Exists..
     if(kInPortByte(0x64) & 0x01) return TRUE;
+    return FALSE;
+}
+
+BOOL kIsInputBufferFull(void) {
+    // 1: There is data not taken by the keyboard.
+    if(kInPortByte(0x64) & 0x02) return TRUE;
     return FALSE;
 }
 
@@ -30,14 +36,6 @@ BOOL kWaitForACKAndPutOtherScanCode(void) {
     else kConvertScanCodeAndPutQueue(bData);
     }
     return bResult;
-}
-
-BOOL kWaitForACKAnd
-
-BOOL kIsInputBufferFull(void) {
-    // 1: There is data not taken by the keyboard.
-    if(kInPortByte(0x64) & 0x02) return TRUE;
-    return FALSE;
 }
 
 BOOL kActivateKeyboard(void) {

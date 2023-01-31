@@ -10,6 +10,7 @@ void Main(void) {
     char vcTemp[2] = {0, };
     BYTE bFlags;
     BYTE bTemp;
+    KEYDATA stData;
 
     /*
     kPrintString(35, 17, ">> COMPLETE <<", GREEN);
@@ -44,17 +45,9 @@ void Main(void) {
     kInitializeIDTTables();
     kLoadIDTR(IDTR_STARTADDRESS);
 
-    /*
-    if(kActivateKeyboard() == TRUE) {
-        kPrintString(35, 22, ">> COMPLETE <<", GREEN);
-        kChangeKeyboardLED(FALSE, FALSE, FALSE);
-    } else {
-        kPrintString(35, 22, ">> ERROR <<", RED_BR);
-        while(1);
-    }
-    */
 
    kPrintString(1, 4, "Keyboard Activate... ", PINK_BR);
+   /*
    if(kActivateKeyboard() == TRUE) {
         kPrintString(30, 4, ">> COMPLETE <<", GREEN);
         kChangeKeyboardLED(FALSE, FALSE, FALSE);
@@ -62,7 +55,14 @@ void Main(void) {
         kPrintString(30, 4, ">> ERROR <<", RED_BR);
         while(1);
     }
-
+    */
+    if(kInitializeKeyboard() == TRUE) {
+        kPrintString(30, 4, ">> COMPLETE <<", GREEN);
+        kChangeKeyboardLED(FALSE, FALSE, FALSE);
+    } else {
+        kPrintString(30, 4, ">> ERROR <<", RED_BR);
+        while(1);
+    }
 
     kInitializePIC();
     kMaskPICInterrupt(0);
@@ -70,15 +70,12 @@ void Main(void) {
 
     int i = 1;
     while(1) {
-        if(kIsOutputBufferFull() == TRUE) {
-            bTemp = kGetKeyboardScanCode();
+        if(kGetKeyFromKeyQueue(&stData) == TRUE) {
+            if(stData.bFlags & KEY_FLAGS_DOWN) {
+                vcTemp[0] = stData.bASCIICode;
+                kPrintString(i++, 10, vcTemp);
 
-            if(kConvertScanCodeToASCIICode(bTemp, &(vcTemp[0]), &bFlags) == TRUE) {
-                if(bFlags & KEY_FLAGS_DOWN) {
-                    kPrintString(i++, 7, vcTemp, WHITE);
-
-                    if(vcTemp[0] == '0') bTemp /= 0;
-                }
+                if(vcTemp[0] == '0') bTemp /= 0;
             }
         }
     }

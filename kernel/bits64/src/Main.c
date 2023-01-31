@@ -66,14 +66,14 @@ void Main(void) {
 
     kInitializePIC();
     kMaskPICInterrupt(0);
-    kEnableInterrupt();
+    kEnableInterrupt(); 
 
     int i = 1;
     while(1) {
         if(kGetKeyFromKeyQueue(&stData) == TRUE) {
             if(stData.bFlags & KEY_FLAGS_DOWN) {
                 vcTemp[0] = stData.bASCIICode;
-                kPrintString(i++, 10, vcTemp);
+                kPrintString(i++, 10, vcTemp, WHITE);
 
                 if(vcTemp[0] == '0') bTemp /= 0;
             }

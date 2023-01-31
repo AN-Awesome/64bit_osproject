@@ -9,7 +9,6 @@ _tools_:
 Disk.img: build/boot.bin build/kernel32.bin build/kernel64.bin
 	./tools/ImageMaker/ImageMaker $^
 	sudo chmod 755 Disk.img
-	./tools/BuildNoCounter/BuildNoCounter
 
 test:
 	sudo qemu-system-x86_64 -m 64 -fda ./Disk.img -rtc base=localtime -M pc

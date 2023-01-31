@@ -21,7 +21,6 @@ clean:
 	rm -f build/*.*
 	rm -f Disk.img
 	rm -f ImageMaker
-	rm -f buildcounter
 
 	rm -f kernel/bits32/data/*.o
 	rm -f kernel/bits32/data/*.elf

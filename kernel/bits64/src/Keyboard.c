@@ -41,14 +41,27 @@ BOOL kWaitForACKAndPutOtherScanCode(void) {
 BOOL kActivateKeyboard(void) {
     int i;
     int j;
+    BOOL bPreviousInterrupt;
+    BOOL bResult;
+
+    // Enable to Interrupt
+    bPreviousInterrupt = kSetInterruptFlag(FALSE);
     
     kOutPortByte(0x64, 0xAE); // (0x64, 0xAE) :: Parameters for activating the keyboard device
     
-    for(j=0; j<100; j++){
+    /* for(j=0; j<100; j++){
         for(i = 0; i<0xFFFF; i++) if(kIsOutputBufferFull() == TRUE) break;
         if(kInPortByte(0x60) == 0xFA) return TRUE;
+    } */
+
+    for(i=0; i<0xFFFF; i++) {
+        if(kIsInputBufferFull() == FALSE) break;
     }
-    return FALSE;
+    kOutPortByte(0x60, 0xF4);
+
+    bResult = kWaitForACKAndPutOtherScanCode();
+    kSetInterruptFlag(bPreviousInterrupt);
+    return bResult;
 }
 
 BYTE kGetKeyboardScanCode(void) {
@@ -59,6 +72,11 @@ BYTE kGetKeyboardScanCode(void) {
 //============================================================
 BOOL kChangeKeyboardLED(BOOL bCapsLockOn, BOOL bNumLockOn, BOOL bScrollLockOn) {
     int i, j;
+    BOOL bPreviousInterrupt;
+    BOOL bResult;
+    BYTE bData;
+
+    bPreviousInterrupt = kSetInterruptFlag(FALSE);
 
     for(i = 0; i < 0xFFFF; i++) if(kIsInputBufferFull() == FALSE) break; // Commands can be sent when the input buffer (port 0x60) is empty
 
@@ -67,8 +85,14 @@ BOOL kChangeKeyboardLED(BOOL bCapsLockOn, BOOL bNumLockOn, BOOL bScrollLockOn) {
     for(j = 0; j<100; j++){
         for(i = 0; i < 0xFFFF; i++) if(kIsOutputBufferFull() == TRUE) break;
         if(kInPortByte(0x60) == 0xFA) break;
-    } 
+    }  
     if(j >= 100) return FALSE;
+
+    bResult = kWaitRForACKANdPutOtherScanCode();
+    if(bResult == FALSE) {
+        kSetInterruptFlag(bPreviousInterrupt);
+        return FALSE;
+    }
 
     kOutPortByte(0x60, (bCapsLockOn << 2) | (bNumLockOn << 1) | bScrollLockOn);
     for(i = 0; i < 0xFFFF; i++) if(kIsInputBufferFull() == FALSE) break;
@@ -82,6 +106,11 @@ BOOL kChangeKeyboardLED(BOOL bCapsLockOn, BOOL bNumLockOn, BOOL bScrollLockOn) {
     }
     if(j >= 100) return FALSE;
     return TRUE;
+
+    bResult = kWaitForACKAndPutOtherScanCode();
+    
+    kSetInterruptFlag(bPreviousInterrupt);
+    return bResult;
 }
 
 void kEnableA20Gate(void) {
@@ -129,6 +158,10 @@ void kReboot(void) {
 
 // Functions related to the ability to convert scan codes to ASCII codes
 static KEYBOARDMANAGER gs_stKeyboardManager = {0,}; // Keyboard state manager
+
+// define Queue and buffer that stores key
+static QUEUE gs_stKeyQueue;
+static KEYDATA gs_vstKeyQueueBuffer[KEY_MAXQUEUECOUNT];
 
 static KEYMAPPINGENTRY gs_vstKeyMappingTable[KEY_MAPPINGTABLEMAXCOUNT] = {
     /* 0 */  {KEY_NONE, KEY_NONE},
@@ -355,7 +388,7 @@ BOOL kConvertScanCodeAndPutQueue(BYTE bScanCode) {
     stData.bScanCode = bScanCode;
 
     // Convert scan code to ASCII code & key state to insert key data
-    if (kConvertScanCodeToASCIICode(bScanCode, &(stData.bASCIICode)&(stData.bFlags)) == TRUE) {
+    if (kConvertScanCodeToASCIICode(bScanCode, &(stData.bASCIICode), &(stData.bFlags)) == TRUE) {
         // Cannot Interrupt
         bPreviousInterrupt = kSetInterruptFlag(FALSE);
 
@@ -366,7 +399,7 @@ BOOL kConvertScanCodeAndPutQueue(BYTE bScanCode) {
         kSetInterruptFlag(bPreviousInterrupt);
     }
 
-    result bResult;
+    return bResult;
 }
 
 // Delete Key Data from Key Queue

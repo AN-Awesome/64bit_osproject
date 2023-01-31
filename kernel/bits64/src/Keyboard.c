@@ -1,12 +1,38 @@
 #include "Types.h"
 #include "AssemblyUtility.h"
 #include "Keyboard.h"
+#inculde "Queue.h"
 
 BOOL kIsOutputBufferFull(void) {
     // 1: Input Data Exists..
     if(kInPortByte(0x64) & 0x01) return TRUE;
     return FALSE;
 }
+
+// Wait ACK
+BOOL kWaitForACKAndPutOtherScanCode(void) {
+    int i, j;
+    BYTE bData;
+    BOOL bResult = FALSE;
+
+    for(j=0; j<100; j++) {
+        for(i=0; i<0xFFFF; i++) {
+            if(kIsOutputBufferFull() == TRUE) break;
+        }
+
+    // Output buffer data ACK
+    bData = kInPortByte(0x60);
+    if(bData == 0xFA) {
+        bResult = TRUE;
+        break;
+    }
+    // NOT ACK = Convert to ASCII code
+    else kConvertScanCodeAndPutQueue(bData);
+    }
+    return bResult;
+}
+
+BOOL kWaitForACKAnd
 
 BOOL kIsInputBufferFull(void) {
     // 1: There is data not taken by the keyboard.
@@ -312,4 +338,53 @@ BOOL kConvertScanCodeToASCIICode(BYTE bScanCode, BYTE *pbASCIICode, BOOL *pbFlag
     // Update modifier key pressed or dropped state
     UpdateCombinationKeyStatusAndLED(bScanCode);
     return TRUE;
+}
+
+BOOL kInitializeKeyboard(void) {
+    // Init Queue
+    kInitializeQueue( &gs_stKeyQueue, gs_vstKeyQueueBuffer, KEY_MAXQUEUECOUNT, sizeof(KEYDATA));
+
+    // Activate Keyboard
+    return kActivateKeyboard();
+}
+
+BOOL kConvertScanCodeAndPutQueue(BYTE bScanCode) {
+    KEYDATA stData;
+    BOOL bResult = FALSE;
+    BOOL bPreviousInterrupt;
+
+    // Insert Scan Code into Key Data
+    stData.bScanCode = bScanCode;
+
+    // Convert scan code to ASCII code & key state to insert key data
+    if (kConvertScanCodeToASCIICode(bScanCode, &(stData.bASCIICode)&(stData.bFlags)) == TRUE) {
+        // Cannot Interrupt
+        bPreviousInterrupt = kSetInterruptFlag(FALSE);
+
+        // Insert Key Queue
+        bResult = kPutQueue( &gs_stKeyQueue, &stData);
+
+        // Restore previous interrupt flags
+        kSetInterruptFlag(bPreviousInterrupt);
+    }
+
+    result bResult;
+}
+
+// Delete Key Data from Key Queue
+BOOL kGetKeyFromKeyQueue(KEYDATA* pstData) {
+    BOOL bResult;
+    BOOL bPreviousInterrupt;
+
+    if( kIsQueueEmpty(&gs_stKeyQueue) == TRUE) return FALSE;
+
+    // Unable to Interrupt
+    bPreviousInterrupt = kSetInterruptFlag(FALSE);
+
+    // Insert Key Queue
+    bResult = kGetQueue(&gs_stKeyQueue, pstData);
+
+    // Restore previous interrupt flags
+    kSetInterruptFlag(bPreviousInterrupt);
+    return bResult;
 }

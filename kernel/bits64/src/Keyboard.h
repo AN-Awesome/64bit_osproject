@@ -63,6 +63,9 @@
 #define KEY_LEFT 0x96
 #define KEY_RIGHT 0x98
 
+// 키 큐의 최대 크기
+#define KEY_MAXQUEUECOUNT 100
+
 #pragma pack (push, 1)
 
 typedef struct kKeyMappingEntryStruct {
@@ -85,6 +88,18 @@ typedef struct kKeyboardManagerStruct {
     int iSkipCountForPause;
 } KEYBOARDMANAGER;
 
+// 키 큐에 삽입할 데이터 구조체
+typedef struct kKeyDataStruct{
+    //키보드에서 전달된 스캔 코드
+    BYTE bScanCode;
+    
+    //스캔 코드를 변환한 ASCII 코드
+    BYTE bASCIICode;
+
+    //키 상태를 저장하는 플래그(눌림/떨어짐/확징 키 여부)
+    BYTE bFlags;
+}KEYDATA;
+
 // Function
 BOOL kIsOutputBufferFull(void);
 BOOL kIsInputBufferFull(void);
@@ -100,5 +115,9 @@ BOOL kIsUseCombinedCode(BYTE bScanCode);
 void UpdateCombinationKeyStatusAndLED(BYTE bScanCode);
 
 BOOL kConvertScanCodeToASCIICode(BYTE bScanCode, BYTE* pbASCIICODE, BOOL* pbFlags);
+BOOL kInitializeKeyboard(void);
+BOOL kConvertScanCodeAndPutQueue(BYTE bScanCode);
+BOOL kGetKeyFromKeyQueue(KEYDATA* pstData);
+BOOL kWaitForACKAndPutOtherScanCode(void);
 
 #endif

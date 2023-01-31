@@ -83,7 +83,7 @@ BOOL kChangeKeyboardLED(BOOL bCapsLockOn, BOOL bNumLockOn, BOOL bScrollLockOn) {
     }  
     if(j >= 100) return FALSE;
 
-    bResult = kWaitRForACKANdPutOtherScanCode();
+    bResult = kWaitForACKAndPutOtherScanCode();
     if(bResult == FALSE) {
         kSetInterruptFlag(bPreviousInterrupt);
         return FALSE;

@@ -49,10 +49,11 @@ BOOL kGetQueue(QUEUE* pstQueue, void* pvData){
     if(kIsQueueEmpty(pstQueue) == TRUE) return FALSE;
 
     // 제거 인덱스가 가리키는 위치에서 데이터의 크기만큼을 복사
-    kMemCpy(pvData, (char*) pstQueue->pvQueueArray + (pstQueue->iDataSize * pstQueue—>iGetIndex), pstQueue—>iDataSize);
+    kMemCpy(pvData, (char*) pstQueue->pvQueueArray + (pstQueue->iDataSize * pstQueue->iGetIndex), pstQueue->iDataSize);
     
     // 제거 인덱스 변경하고 제거 동작을 수행했음을 기록
-    pstQueue—>iGetIndex = (pstQueue->iGetIndex + 1) % pstQueue->iMaxDataCount;
-    pstQueue—>bLastOperationPut = FALSE;
+    pstQueue->iGetIndex = (pstQueue->iGetIndex + 1) % pstQueue->iMaxDataCount;
+    pstQueue->bLastOperationPut = FALSE;
+    
     return TRUE;
 }

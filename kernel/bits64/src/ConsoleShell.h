@@ -35,11 +35,11 @@ typedef struct kParameterListStruct {
 void kStartConsoleShell(void);
 void kExecuteCommand(const char* pcCommandBuffer);
 void kInitializeParameter(PARAMETERLIST* pstList, const char* pcParameter);
-int kGetNextParameter(PARAMEETERLIST* pstList, char* pcParameter);
+int kGetNextParameter(PARAMETERLIST* pstList, char* pcParameter);
 
 // Function that process Command
 void kHelp(const char* pcParameterBuffer);
-void kCls(cosnt char* pcParameterBuffer);
+void kCls(const char* pcParameterBuffer);
 void kShowTotalRAMSize(const char* pcParameterBuffer);
 void kStringToDecimalHexTest(const char* pcParameterBuffer);
 void kShutdown(const char* pcParameterBuffer);

@@ -43,6 +43,11 @@ void kKeyboardHandler(int iVectorNumber) {
     vcBuffer[8] = '0' + g_iKeyboardInterruptCount;
     g_iKeyboardInterruptCount = (g_iKeyboardInterruptCount + 1) % 10;
     kPrintString(70, 1, vcBuffer, SKY_BR);
+
+    if(kIsOutputBufferFull() == TRUE) {
+        bTemp = kGetKeyboardScanCode();
+        kConvertScanCodeAndPutQueue(bTemp);
+    }
     
     kSendEOIToPIC(iVectorNumber - PIC_IRQSTARTVECTOR);
 }

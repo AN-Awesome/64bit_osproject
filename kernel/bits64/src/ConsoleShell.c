@@ -2,6 +2,7 @@
 #include "Console.h"
 #include "Keyboard.h"
 #include "Utility.h"
+#include "TextColor.h"
 
 // Command Table def.
 SHELLCOMMANDENTRY gs_vstCommandTable[] = {
@@ -33,11 +34,11 @@ void kStartConsoleShell(void) {
         if(bKey == KEY_BACKSPACE) {
             if(iCommandBufferIndex > 0) {       //  Remove Last letter from Command Buffer
                 kGetCursor(&iCursorX, &iCursorY);
-                kPrintStringXY(iCursorX - 1, iCursorY, " ");
+                kPrintStringXY(iCursorX - 1, iCursorY, " ", WHITE);
                 kSetCursor(iCursorX - 1, iCursorY);
                 iCommandBufferIndex--;
             }
-        } else if(bkey == KEY_ENTER) { // Enter key
+        } else if (bKey == KEY_ENTER) { // Enter key
             kPrintf("\n");
 
             if(iCommandBufferIndex > 0) {       //  Implement Command from Command Buffer
@@ -98,11 +99,11 @@ int kGetNextParameter(PARAMETERLIST* pstList, char* pcParameter) {
 
     if(pstList->iLength <= pstList->iCurrentPosition) return 0;
 
-    for(i = pstList->iCurentPosition; i < pstList->iLength; i++) if(pstList->pcBuffer[i] == ' ') break;
+    for(i = pstList->iCurrentPosition; i < pstList->iLength; i++) if(pstList->pcBuffer[i] == ' ') break;
 
     // Copy Parameter and return length
     kMemCpy(pcParameter, pstList->pcBuffer + pstList->iCurrentPosition, i);
-    ilength = i - pstList->iCurrentPosition;
+    iLength = i - pstList->iCurrentPosition;
     pcParameter[iLength] = '\0';
 
     // Update Parameter location

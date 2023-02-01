@@ -145,7 +145,7 @@ BYTE kGetCh(void) {
 }
 
 // 문자열을 X, Y 위치에 출력
-void kPrintStringXY(int iX, int iY, const char* pcString) {
+void kPrintStringXY(int iX, int iY, const char* pcString, int color) {
     CHARACTER* pstScreen = (CHARACTER*) CONSOLE_VIDEOMEMORYADDRESS;
     int i;
 
@@ -155,6 +155,6 @@ void kPrintStringXY(int iX, int iY, const char* pcString) {
     // 문자열의 길이만큼 루프를 돌면서 문자와 속성을 저장
     for(i = 0; pcString[i] != 0; i++ ){
         pstScreen[i].bCharactor = pcString[i];
-        pstScreen[i].bAttribute = CONSOLE_DEFAULTTEXTCOLOR;
+        pstScreen[i].bAttribute = color;
     }
 }

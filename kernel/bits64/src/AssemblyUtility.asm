@@ -5,6 +5,7 @@ SECTION .text
 ; OBJECT :: ./src/AssemblyUtility.h
 global kInPortByte, kOutPortByte, kLoadGDTR, kLoadTR, kLoadIDTR
 global kEnableInterrupt, kDisableInterrupt, kReadRFLAGS
+global kReadTSC
 
 ; Read 1 byte to the port
 ; PARAM: WORD wPort
@@ -59,4 +60,16 @@ kReadRFLAGS:
     pushfq
     pop rax
 
+    ret
+
+; READ AND RETURN TSC(TIME STAMP COUNTER)
+kkReadTSC:
+    push rdx
+
+    rdtsc
+
+    shl rdx, 32
+    or rax, rdx
+
+    pop rdx
     ret

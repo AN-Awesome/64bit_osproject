@@ -7,7 +7,7 @@ void kInitializePIT(WORD wCount, BOOL bPeriodic) {
     kOutPortByte(PIT_PORT_CONTROL, PIT_COUNTER0_ONCE);
 
     // Set Mode 2 if Timer repeats regular intervals
-    if(bPeriodc == TRUE) kOutPortByte(PIT_PORT_CONTROL, PIT_COUNTER0_PERIODIC);
+    if(bPeriodic == TRUE) kOutPortByte(PIT_PORT_CONTROL, PIT_COUNTER0_PERIODIC);
 
     // Set Initial value in order to LSB -> MSB at Counter 0
     kOutPortByte(PIT_PORT_COUNTER0, wCount);
@@ -36,7 +36,7 @@ void kWaitUsingDirectPIT(WORD wCount) {
     WORD wCurrentCounter0;
 
     // Set PIT Controller to Count 0~0xFFFF Repeatedly
-    kInitilaizePIT(0, TRUE);
+    kInitializePIT(0, TRUE);
     // Wait Until wCount Increases
     wLastCounter0 = kReadCounter0();
     while(1) {

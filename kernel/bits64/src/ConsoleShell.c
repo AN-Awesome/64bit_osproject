@@ -238,8 +238,8 @@ void kSetTimer(const char* pcParameterBuffer) {
     }
     bPeriodic = kAToI(vcParameter, 10);
 
-    kInitializePIT(MST0COUNT(lValue), bPeriodic);
-    kPrintf("Time = %d ms, Periodic = %d Change Complete\n", lValule, bPeriodic);
+    kInitializePIT(MSTOCOUNT(lValue), bPeriodic);
+    kPrintf("Time = %d ms, Periodic = %d Change Complete\n", lValue, bPeriodic);
 }
 
 void kWaitUsingPIT(const char* pcParameterBuffer) {
@@ -260,18 +260,18 @@ void kWaitUsingPIT(const char* pcParameterBuffer) {
 
     // Disable Interrupt - Direct time measurement via PIT controller
     kDisableInterrupt();
-    for(int i = 0; i < lMillisecond / 30; i++) kWaitUsingDirectPIT(MST0COUNT(30));
-    kWaitUsingDirectPIT(MST0COUNT(lMillisecond % 30));
+    for(int i = 0; i < lMillisecond / 30; i++) kWaitUsingDirectPIT(MSTOCOUNT(30));
+    kWaitUsingDirectPIT(MSTOCOUNT(lMillisecond % 30));
     kEnableInterrupt();
     kPrintf("%d ms Sleep Complete\n", lMillisecond);
 
-    kInitializePIT(MST0COUNT(1), TRUE);
+    kInitializePIT(MSTOCOUNT(1), TRUE);
 }
 
-void kReadStampCounter(const char* pcParameterBuffer) {
+void kReadTimeStampCounter(const char* pcParameterBuffer) {
     QWORD qwTSC;
 
-    qsTSC = kReadTSC();
+    qwTSC = kReadTSC();
     kPrintf("Time Stamp Counter = %q\n", qwTSC);
 }
 
@@ -284,8 +284,8 @@ void kMeasureProcessorSpeed(const char* pcParameterBuffer) {
     kDisableInterrupt();
     for(i = 0; i < 200; i++) {
         qwLastTSC = kReadTSC();
-        kWaitUsingDirectPIT(MST0COUNT(50));
-        qwTotalTSC += kReadTSC() - qwLastTSC();
+        kWaitUsingDirectPIT(MSTOCOUNT(50));
+        qwTotalTSC += kReadTSC() - qwLastTSC;
 
         kPrintf(".");
     }
@@ -296,7 +296,7 @@ void kMeasureProcessorSpeed(const char* pcParameterBuffer) {
 
 void kShowDateAndTime(const char* pcParameterBuffer) {
     BYTE bSecond, bMinute, bHour;
-    BYte bDayOfWeek, bDayOfMonth, bMonth;
+    BYTE bDayOfWeek, bDayOfMonth, bMonth;
     WORD wYear;
 
     // Read Date and Time From RTC

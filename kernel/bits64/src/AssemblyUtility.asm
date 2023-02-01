@@ -63,7 +63,7 @@ kReadRFLAGS:
     ret
 
 ; READ AND RETURN TSC(TIME STAMP COUNTER)
-kkReadTSC:
+kReadTSC:
     push rdx
 
     rdtsc

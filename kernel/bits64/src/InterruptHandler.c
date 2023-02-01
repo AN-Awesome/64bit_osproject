@@ -4,6 +4,7 @@
 #include "TextColor.h"
 #include "Console.h"
 
+
 void kCommonExceptionHandler(int iVectorNumber, QWORD qwErrorCode) {
     char vcBuffer[3] = {0, };
 

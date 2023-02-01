@@ -19,7 +19,7 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"wait", "Wait ms Using PIT, ex)wait 100(ms)",  kWaitUsingPIT},
     {"rdtsc", "Read Time Stamp Counter", kReadTimeStampCounter},
     {"cpuspeed", "Measure Processor Speed", kMeasureProcessorSpeed},
-    {"date", "Show Date And Time", kShowDateAndTime}
+    {"now", "Show Date And Time", kShowDateAndTime}
 };
 
 //==============
@@ -251,19 +251,20 @@ void kWaitUsingPIT(const char* pcParameterBuffer) {
     // Init
     kInitializeParameter(&stList, pcParameterBuffer);
     if(kGetNextParameter(&stList, vcParameter) == 0) {
-        kPrintf("ex)wait 100(ms)\n");
+        kPrintf(" ex)wait 100(ms)\n");
         return;
     }
 
     lMillisecond = kAToI(pcParameterBuffer, 10);
-    kPrintf("%d ms Sleep Start...\n", lMillisecond);
+    kSetColor(GRAY);
+    kPrintf("\n %d ms Sleep Start...\n", lMillisecond);
 
     // Disable Interrupt - Direct time measurement via PIT controller
     kDisableInterrupt();
     for(int i = 0; i < lMillisecond / 30; i++) kWaitUsingDirectPIT(MSTOCOUNT(30));
     kWaitUsingDirectPIT(MSTOCOUNT(lMillisecond % 30));
     kEnableInterrupt();
-    kPrintf("%d ms Sleep Complete\n", lMillisecond);
+    kPrintf(" %d ms Sleep Complete\n", lMillisecond);
 
     kInitializePIT(MSTOCOUNT(1), TRUE);
 }
@@ -272,13 +273,14 @@ void kReadTimeStampCounter(const char* pcParameterBuffer) {
     QWORD qwTSC;
 
     qwTSC = kReadTSC();
-    kPrintf("Time Stamp Counter = %q\n", qwTSC);
+    kPrintf(" Time Stamp Counter = %q\n", qwTSC);
 }
 
 void kMeasureProcessorSpeed(const char* pcParameterBuffer) {
     int i;
     QWORD qwLastTSC, qwTotalTSC = 0;
-    kPrintf("Now Measuring.");
+    kSetColor(BLUE_BR);
+    kPrintf("\n Now Measuring.");
 
     // Indirect measurement of processor speed through TSC
     kDisableInterrupt();
@@ -287,11 +289,11 @@ void kMeasureProcessorSpeed(const char* pcParameterBuffer) {
         kWaitUsingDirectPIT(MSTOCOUNT(50));
         qwTotalTSC += kReadTSC() - qwLastTSC;
 
-        kPrintf(".");
+        // kPrintf(".");
     }
 
     // Restore Timer
-    kPrintf("\nCPU Speed = %d MHJz\n", qwTotalTSC / 10 / 1000 / 1000);
+    kPrintf("\n CPU Speed = %d MHz\n", qwTotalTSC / 10 / 1000 / 1000);
 }
 
 void kShowDateAndTime(const char* pcParameterBuffer) {
@@ -303,6 +305,8 @@ void kShowDateAndTime(const char* pcParameterBuffer) {
     kReadRTCTime(&bHour, &bMinute, &bSecond);
     kReadRTCDate(&wYear, &bMonth, &bDayOfMonth, &bDayOfWeek);
 
-    kPrintf("Date: %d/%d/%d %s, ", wYear, bMonth, bDayOfMonth, kConvertDayOfWeekToString(bDayOfWeek));
-    kPrintf("Time: %d:%d:%d\n", bHour, bMinute, bSecond);
+    kSetColor(GREEN);
+
+    kPrintf("\n Date: %d/%d/%d %s\n", wYear, bMonth, bDayOfMonth, kConvertDayOfWeekToString(bDayOfWeek));
+    kPrintf(" Time: %d:%d:%d\n", bHour, bMinute, bSecond);
 }

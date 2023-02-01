@@ -1,10 +1,11 @@
 #include "ConsoleEster.h"
+#include "Console.h"
 
-{"PYT", "<< Show Our Team Member >>", KShowTeammember}
+// {"PYT", "<< Show Our Team Member >>", KShowTeammember}
 
-void KShowTeammember(void) {
+void KShowTeamMember(const char* pcCommandBuffer) {
     kSetColor(GREEN);
-    kPrintf(" ===============================\n");
+    kPrintf("\n ===============================\n");
     kPrintf(" === MASTER : KIM DONG HUI   ===\n");
     kPrintf(" === SLAVE1 : PARK YEON TAEK ===\n");
     kPrintf(" === SLAVE2 : JUNG HAE RAM   ===\n");

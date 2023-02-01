@@ -11,6 +11,7 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"strtod", "String To Decial/Hex Convert", kStringToDecimalHexTest},
     {"shutdown", "Shutdown And Reboot OS", kShutdown},
 };
+
 //==============
 // Compose Shell
 //==============
@@ -36,9 +37,7 @@ void kStartConsoleShell(void) {
                 kSetCursor(iCursorX - 1, iCursorY);
                 iCommandBufferIndex--;
             }
-        }
-        // Enter key
-        else if(bkey == KEY_ENTER) {
+        } else if(bkey == KEY_ENTER) { // Enter key
             kPrintf("\n");
 
             if(iCommandBufferIndex > 0) {       //  Implement Command from Command Buffer
@@ -50,13 +49,10 @@ void kStartConsoleShell(void) {
             kPrintf("%s", CONSOLESHELL_PROMPTMESSAGE);
             kMemSet(vcCommandBuffer, '\0', CONSOLESHELL_MAXCOMMANDBUFFERCOUNT);
             iCommandBufferIndex = 0;
-        }
-        // Ignores Shift key, Caps Lock, Num Lock, Scroll Lock
-        else if ((bKey == KEY_LSHIFT) || (bKey == KEY_RSHIFT) ||(bKey == KEY_CAPSLOCK) || (bKey == KEY_NUMLOCK) || (bKey == KEY_SCROLLLOCK)) {
-            ;
-        } else {
+        } else if ((bKey == KEY_LSHIFT) || (bKey == KEY_RSHIFT) ||(bKey == KEY_CAPSLOCK) || (bKey == KEY_NUMLOCK) || (bKey == KEY_SCROLLLOCK)) ; // Ignores Shift key, Caps Lock, Num Lock, Scroll Lock
+        else {
             // Tab to Blank
-            if (bKey == KEY_TAB) (bKey = ' ');
+            if (bKey == KEY_TAB) bKey = ' ';
             // Only if there is space left in Buffer
             if(iCommandBufferIndex < CONSOLESHELL_MAXCOMMANDBUFFERCOUNT) {
                 vcCommandBuffer[iCommandBufferIndex++] = bKey;
@@ -102,9 +98,7 @@ int kGetNextParameter(PARAMETERLIST* pstList, char* pcParameter) {
 
     if(pstList->iLength <= pstList->iCurrentPosition) return 0;
 
-    for(i = pstList->iCurentPosition; i < pstList->iLength; i++) {
-        if(pstList->pcBuffer[i] == ' ') break;
-    }
+    for(i = pstList->iCurentPosition; i < pstList->iLength; i++) if(pstList->pcBuffer[i] == ' ') break;
 
     // Copy Parameter and return length
     kMemCpy(pcParameter, pstList->pcBuffer + pstList->iCurrentPosition, i);
@@ -144,11 +138,13 @@ void kHelp(const char* pcCommandBuffer) {
         kPrintf(" - %s\n", gs_vstCommandTable[i].pcHelp);
     }
 }
+
 // Clear the Screen
 void kCls(const char* pcParameterBuffer) {
     kClearScreen();
-     kSetCursor(0, 1);
- } 
+    kSetCursor(0, 1);
+} 
+
 // Total Memory Size Output
 void kShowTotalRAMSize(const char* pcParameterBuffer) {
     kPrintf( "Total RAM Size = %d MB\n", kGetTotalRAMSize());
@@ -181,9 +177,11 @@ void kStringToDecimalHexTest(const char* pcParameterBuffer) {
         iCount++;
     }
 }
+
 // Restart PC
 void kShutdown(const char* pcParameterBuffer) {
     kPrintf("System Shutdown Start...\n");
+
     // Restart PC via Keyboard Controller
     kPrintf("Press Any Key To Reboot PC...");
     kGetCh();

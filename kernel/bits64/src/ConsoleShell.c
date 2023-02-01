@@ -56,7 +56,7 @@ void kStartConsoleShell(void) {
             ;
         } else {
             // Tab to Blank
-            if (bKey == KEY_TAB) (bKey = ' ');
+            if (bKey == KEY_TAB) bKey = ' ';
             // Only if there is space left in Buffer
             if(iCommandBufferIndex < CONSOLESHELL_MAXCOMMANDBUFFERCOUNT) {
                 vcCommandBuffer[iCommandBufferIndex++] = bKey;
@@ -148,7 +148,7 @@ void kHelp(const char* pcCommandBuffer) {
 void kCls(const char* pcParameterBuffer) {
     kClearScreen();
      kSetCursor(0, 1);
- } 
+} 
 // Total Memory Size Output
 void kShowTotalRAMSize(const char* pcParameterBuffer) {
     kPrintf( "Total RAM Size = %d MB\n", kGetTotalRAMSize());

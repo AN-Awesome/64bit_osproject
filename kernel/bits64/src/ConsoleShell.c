@@ -161,6 +161,7 @@ void kStringToDecimalHexTest(const char* pcParameterBuffer) {
     PARAMETERLIST stList;
     int iCount = 0;
     long lValue;
+    
 
     // Init Parameter
     kInitializeParameter(&stList, pcParameterBuffer);

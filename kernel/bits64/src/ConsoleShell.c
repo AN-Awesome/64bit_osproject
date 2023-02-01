@@ -6,6 +6,7 @@
 #include "RTC.h"
 #include "AssemblyUtility.h"
 #include "TextColor.h"
+#include "ConsoleEster.h"
 
 // Command Table def.
 SHELLCOMMANDENTRY gs_vstCommandTable[] = {
@@ -172,7 +173,8 @@ void kCls(const char* pcParameterBuffer) {
 
 // Total Memory Size Output
 void kShowTotalRAMSize(const char* pcParameterBuffer) {
-    kPrintf( "Total RAM Size = %d MB\n", kGetTotalRAMSize());
+    kSetColor(SKY);
+    kPrintf( " Total RAM Size = %d MB\n", kGetTotalRAMSize());
 }
 
 // Convert String into Number & Output
@@ -273,6 +275,7 @@ void kReadTimeStampCounter(const char* pcParameterBuffer) {
     QWORD qwTSC;
 
     qwTSC = kReadTSC();
+    kSetColor(GREEN);
     kPrintf(" Time Stamp Counter = %q\n", qwTSC);
 }
 

@@ -1,7 +1,8 @@
 #define YELLOW 0x0E
 #define BROWN 0x06
 
-#define GREEN 0x0A
+#define GREEN 0x02
+#define GREEN_BR 0x0A
 
 #define BLUE 0x01
 #define BLUE_BR 0x09

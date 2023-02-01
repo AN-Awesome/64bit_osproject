@@ -11,7 +11,29 @@ void kPrintString(int iX, int iY, const char* pcString, int color);
 void Main(void) {
     int iCursorX, iCursorY;
 
-    kInitializeConsole(0, 10);
+    kInitializeConsole(1, 3);
+    kGetCursor(&iCursorX, &iCursorY);
+
+    kInitializeGDTTableAndTSS();
+    kLoadGDTR(GDTR_STARTADDRESS);
+
+    kLoadTR(GDT_TSSSEGMENT);
+
+    kInitializeIDTTables();
+    kLoadIDTR(IDTR_STARTADDRESS);
+
+    kCheckTotalRAMSize();
+    kSetCursor(1, 3);
+    kPrintf("RAM Size = %d MB\n", kGetTotalRAMSize());
+
+    if(kInitializeKeyboard() == TRUE) kChangeKeyboardLED(FALSE, FALSE, FALSE);
+    else while(1);
+
+    kInitializePIC();
+    kMaskPICInterrupt(0);
+
+    kEnableInterrupt();
+    kStartConsoleShell();
 }
 
 void kPrintString(int iX, int iY, const char* pcString, int color) {

@@ -5,6 +5,8 @@
 // 콘솔의 정보를 관리하는 자료구조
 CONSOLEMANAGER gs_stConsoleManager = {0, };
 
+int color;
+
 // 콘솔 초기화
 void kInitializeConsole(int iX, int iY) {
     // 자료구조를 모두 0 으로 초기화
@@ -46,6 +48,10 @@ void kGetCursor(int* piX, int* piY ) {
     // 화면 너비로 나누면 Y 좌표를 구할 수 있음
     *piX = gs_stConsoleManager.iCurrentPrintOffset % CONSOLE_WIDTH;
     *piY = gs_stConsoleManager.iCurrentPrintOffset / CONSOLE_WIDTH;
+}
+
+void kSetColor(int c) {
+    color = c;
 }
 
 // printf 함수의 내부 구현
@@ -90,7 +96,7 @@ int kConsolePrintString(const char* pcBuffer) {
         // 일반 문자열 출력
         else {
             pstScreen[iPrintOffset].bCharactor = pcBuffer[i];
-            pstScreen[iPrintOffset].bAttribute = CONSOLE_DEFAULTTEXTCOLOR;
+            pstScreen[iPrintOffset].bAttribute = color;
             iPrintOffset++;
         }
 
@@ -104,7 +110,7 @@ int kConsolePrintString(const char* pcBuffer) {
             for(j = (CONSOLE_HEIGHT - 1) * (CONSOLE_WIDTH); j < (CONSOLE_HEIGHT * CONSOLE_WIDTH); j++ ) {
                 // 공백 출력
                 pstScreen[j].bCharactor = ' ';
-                pstScreen[j].bAttribute = CONSOLE_DEFAULTTEXTCOLOR;
+                pstScreen[j].bAttribute = color;
             }
             // 출력할 위치를 가장 아래쪽 라인의 처음으로 설정
             iPrintOffset = (CONSOLE_HEIGHT - 1) * CONSOLE_WIDTH;

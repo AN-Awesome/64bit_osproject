@@ -25,7 +25,11 @@ void kStartConsoleShell(void) {
     int iCursorX, iCursorY;
 
     // Prompt Output
-    kPrintf(CONSOLESHELL_PROMPTMESSAGE);
+    kSetColor(PINK_BR);
+    kPrintf("%s", CONSOLESHELL_PROMPTMESSAGE);
+    
+    kSetColor(WHITE);
+    kPrintf("%s", CONSOLESHELL_SPLIT);
 
     while(1) {
         // Wait Until Key is recieved
@@ -47,7 +51,13 @@ void kStartConsoleShell(void) {
             }
 
             // Prompt Output & Init Command Buffer
-            kPrintf("%s", CONSOLESHELL_PROMPTMESSAGE);
+            kSetColor(PINK_BR);
+            kPrintf("\n%s", CONSOLESHELL_PROMPTMESSAGE);
+            
+            kSetColor(WHITE);
+            kPrintf("%s", CONSOLESHELL_SPLIT);
+
+
             kMemSet(vcCommandBuffer, '\0', CONSOLESHELL_MAXCOMMANDBUFFERCOUNT);
             iCommandBufferIndex = 0;
         } else if ((bKey == KEY_LSHIFT) || (bKey == KEY_RSHIFT) ||(bKey == KEY_CAPSLOCK) || (bKey == KEY_NUMLOCK) || (bKey == KEY_SCROLLLOCK)) ; // Ignores Shift key, Caps Lock, Num Lock, Scroll Lock
@@ -82,7 +92,8 @@ void kExecuteCommand(const char* pcCommandBuffer) {
             break;
         }
     }
-    if (i >= iCount) kPrintf("'%s' is not found.\n", pcCommandBuffer);
+    kSetColor(RED_BR);
+    if (i >= iCount) kPrintf(" '%s' is not found.\n", pcCommandBuffer);
 }
 
 // Parameter Data Structure Init.
@@ -120,22 +131,26 @@ void kHelp(const char* pcCommandBuffer) {
     int iCursorX, iCursorY;
     int iLength, iMaxCommandLength = 0;
 
-    kPrintf("=====================================\n");
-    kPrintf("        Awesome OS SHELL Help          ");
-    kPrintf("=====================================\n");
+    kSetColor(BROWN);
+    kPrintf("\n");
+
+    kPrintf(" =====================================\n");
+    kPrintf("         Awesome OS SHELL Help        \n");
+    kPrintf(" =====================================\n");
 
     iCount = sizeof(gs_vstCommandTable) / sizeof(SHELLCOMMANDENTRY);
 
+    
     for(i = 0; i < iCount; i++) {
         iLength = kStrLen(gs_vstCommandTable[i].pcCommand);
-        if(iLength > iMaxCommandLength) (iMaxCommandLength = iLength); // Check Code Style plz 
+        if(iLength > iMaxCommandLength) iMaxCommandLength = iLength; // Check Code Style plz 
     }
 
     // Help Output
     for(i = 0; i < iCount; i++) {
-        kPrintf("%s", gs_vstCommandTable[i].pcCommand);
+        kPrintf(" %s", gs_vstCommandTable[i].pcCommand);
         kGetCursor(&iCursorX, &iCursorY);
-        kSetCursor(iMaxCommandLength, &iCursorY);
+        kSetCursor(iMaxCommandLength, iCursorY);
         kPrintf(" - %s\n", gs_vstCommandTable[i].pcHelp);
     }
 }
@@ -182,10 +197,11 @@ void kStringToDecimalHexTest(const char* pcParameterBuffer) {
 
 // Restart PC
 void kShutdown(const char* pcParameterBuffer) {
-    kPrintf("System Shutdown Start...\n");
+    kSetColor(SKY_BR);
+    kPrintf("\n System Shutdown Start...\n");
 
     // Restart PC via Keyboard Controller
-    kPrintf("Press Any Key To Reboot PC...");
+    kPrintf(" Press Any Key To Reboot PC...");
     kGetCh();
     kReboot();
 }

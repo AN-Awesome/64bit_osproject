@@ -5,7 +5,8 @@
 
 // Macro
 #define CONSOLESHELL_MAXCOMMANDBUFFERCOUNT 300
-#define CONSOLESHELL_PROMPTMESSAGE         "AWESOME64>"
+#define CONSOLESHELL_PROMPTMESSAGE         " AWESOME OS"
+#define CONSOLESHELL_SPLIT                 ": "
 
 // Define Type of Function Pointer that accpets String Pointer as Parameter
 typedef void(*CommandFunction) (const char* pcParameter);

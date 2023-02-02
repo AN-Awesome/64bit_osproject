@@ -51,4 +51,6 @@ void kReadTimeStampCounter(const char* pcParameterBuffer);
 void kMeasureProcessorSpeed(const char* pcParameterBuffer);
 void kShowDateAndTime(const char* pcParameterBuffer);
 
+void kCreateTestTask(const char* pcParameterBuffer);
+
 #endif

@@ -4,6 +4,7 @@
 #include "Utility.h"
 #include "PIT.h"
 #include "RTC.h"
+#include "Task.h"
 #include "AssemblyUtility.h"
 #include "TextColor.h"
 #include "ConsoleEster.h"
@@ -316,4 +317,33 @@ void kShowDateAndTime(const char* pcParameterBuffer) {
 
     kPrintf("\n Date: %d/%d/%d %s\n", wYear, bMonth, bDayOfMonth, kConvertDayOfWeekToString(bDayOfWeek));
     kPrintf(" Time: %d:%d:%d\n", bHour, bMinute, bSecond);
+}
+
+static TCB gs_vstTask[2] = {0, };
+static QWORD gs_vstStack[1024] = {0, };
+
+// Test Switch-Tasks
+void kTestTask(void) {
+    int i = 0;
+    while(1) {
+        kPrintf("[%d] This message is from kTestTask. Press any key to switch " "kConsoleShell~!!\n", i++);
+        kGetCh();
+
+        kSwitchContext(&(gs_vstTask[1].stContext), &(gs_vstTask[0].stContext));
+    }
+}
+
+void kCreateTestTask(const char* pcParameterBuffer) {
+    KEYDATA stData;
+    int i= 0;
+
+    // Set Task
+    kSetUpTask(&(gs_vstTask[1]), 1, 0, (QWORD)kTestTask, &(gs_vstStack), sizeof(gs_vstStack));
+
+    while(1) {
+        kPrintf("[%d] This message is from kConsoleShell. Press any key to " "switch TestTask~!!\n", i++);
+        if(kGetCh() == 'q') break;
+
+        kSwitchContext(&(gs_vstTask[0].stContext), &(gs_vstTask[1].stContext));
+    }
 }

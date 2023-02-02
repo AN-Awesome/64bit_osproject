@@ -13,7 +13,7 @@ typedef struct kListlinkStruct{
     // ID to identify
     void* pvNext;
     QWORD qwID;
-} ListLink;
+} LISTLINK;
 
 // Data Structure for Managing List
 typedef struct kListManagerStruct{

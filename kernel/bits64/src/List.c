@@ -8,17 +8,19 @@ void kInitializeList(LIST* pstList){
 }
 
 // Returns the number of items in a List
-int kGetListCount(const LIST* pstList) return pstList->iItemCount;
+int kGetListCount(const LIST* pstList) {
+    return pstList->iItemCount;
+}
 
 // Add data to List
-void kAddListToTail(LIST* pstList, void* pvItem){
+void kAddListToTail(LIST* pstList, void* pvItem) {
     LISTLINK* pstLink;
 
     pstLink = (LISTLINK*) pvItem;
     pstLink->pvNext = NULL;
 
     // if LIst is Empty -> Set Header and Tail to added data
-    if(pstList->pvHeader == NULL){
+    if(pstList->pvHeader == NULL) {
         pstList->pvHeader = pvItem;
         pstList->pvTail = pvItem;
         pstList->iItemCount = 1;
@@ -35,7 +37,7 @@ void kAddListToTail(LIST* pstList, void* pvItem){
 }
 
 // Add data to the first part of the list
-void kAddListToHeader(LIST* pstList, void* pvItem){
+void kAddListToHeader(LIST* pstList, void* pvItem) {
     LISTLINK* pstLink;
 
     // Set the address of the next data as Header
@@ -57,7 +59,7 @@ void kAddListToHeader(LIST* pstList, void* pvItem){
 
 // Delete Data from List
 // Return Data Pointer
-void* kRemoveList(LIST* pstList, QWORD qwID){
+void* kRemoveList(LIST* pstList, QWORD qwID) {
     LISTLINK* pstLink;
     LISTLINK* pstPreviousLink;
 
@@ -66,7 +68,7 @@ void* kRemoveList(LIST* pstList, QWORD qwID){
         // Match ID is Exist -> Delete
         if(pstLink->qwID == qwID){
             // if Data is only one -> List reset
-            if((pstLink == pstList->pvHeader) && (pstLink == pstList->pvTail)){
+            if((pstLink == pstList->pvHeader) && (pstLink == pstList->pvTail)) {
                 pstList->pvHeader = NULL;
                 pstList->pvTail = NULL;
             }
@@ -85,7 +87,7 @@ void* kRemoveList(LIST* pstList, QWORD qwID){
 }
 
 // Delete List First Data and Return
-void* kRemoveListFromHeader(LIST* pstList){
+void* kRemoveListFromHeader(LIST* pstList) {
     LISTLINK* pstLink;
 
     if(pstList->iItemCount == 0) return NULL;
@@ -96,7 +98,7 @@ void* kRemoveListFromHeader(LIST* pstList){
 }
 
 // Delete Last Data of List and Return
-void* kRemoveListFromTail(LIST* pstList){
+void* kRemoveListFromTail(LIST* pstList) {
     LISTLINK* pstLink;
 
     if(pstList->iItemCount == 0) return NULL;
@@ -107,7 +109,7 @@ void* kRemoveListFromTail(LIST* pstList){
 }
 
 // Fine Item in List
-void* kFindList(const LIST* pstList, QWORD qwID){
+void* kFindList(const LIST* pstList, QWORD qwID) {
     LISTLINK* pstLink;
 
     for(pstLink = (LISTLINK*) pstList->pvHeader; pstLink != NULL; pstLink = pstLink->pvNext){
@@ -118,13 +120,17 @@ void* kFindList(const LIST* pstList, QWORD qwID){
 }
 
 // Return List Header
-void* kGetHeaderFromList(const LIST* pstList) return pstList->pvHeader;
+void* kGetHeaderFromList(const LIST* pstList) {
+    return pstList->pvHeader;
+}
 
 // Return LIst Tail
-void* kGetTailFromList(const LIST* pstList) return pstList->pvTail;
+void* kGetTailFromList(const LIST* pstList) {
+    return pstList->pvTail;
+}
 
 // Return Next Item
-void* kGetNextFromList(const LIST* pstList, void* pstCurrent){
+void* kGetNextFromList(const LIST* pstList, void* pstCurrent) {
     LISTLINK* pstLink;
     pstLink = (LISTLINK*) pstCurrent;
     return pstLink->pvNext;

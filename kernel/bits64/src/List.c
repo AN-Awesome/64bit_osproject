@@ -11,7 +11,7 @@ void kInitializeList(LIST* pstList){
 int kGetListCount(const LIST* pstList) return pstList->iItemCount;
 
 // Add data to List
-void kAddListToTail(LIST* pstist, void* pvItem){
+void kAddListToTail(LIST* pstList, void* pvItem){
     LISTLINK* pstLink;
 
     pstLink = (LISTLINK*) pvItem;

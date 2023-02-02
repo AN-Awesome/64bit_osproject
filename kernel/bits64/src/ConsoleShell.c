@@ -22,7 +22,8 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"rdtsc", "Read Time Stamp Counter", kReadTimeStampCounter},
     {"cpuspeed", "Measure Processor Speed", kMeasureProcessorSpeed},
     {"now", "Show Date And Time", kShowDateAndTime},
-    {"dev", "Show Project Members", KShowTeamMember}
+    {"dev", "Show Project Members", KShowTeamMember},
+    {"createtask", "Create Task", kCreateTestTask}
 };
 
 //==============

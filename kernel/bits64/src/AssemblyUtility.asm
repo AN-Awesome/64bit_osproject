@@ -159,9 +159,9 @@ kSwitchContext:
 
     pushfq
     pop rax
-    mov qword[rdi + (21 * 8)] rax
+    mov qword[rdi + (21 * 8)], rax
 
-    mov ax. cs
+    mov ax, cs
     mov qword[rdi + (20 * 8)], rax
 
     mov rax, qword[rbp + 8]

@@ -17,27 +17,26 @@ typedef struct kListlinkStruct{
 
 // Data Structure for Managing List
 typedef struct kListManagerStruct{
-    // Number of List Data
-    int iItemCount;
-    // List First Address
-    void* pvHeader;
-    // List Last Address
-    void* pvTail;
+    int iItemCount; // Number of List Data
+    void* pvHeader; // List First Address
+    void* pvTail; // List Last Address
 } LIST;
 
 #pragma pack(pop)
 
 //Function
 void kInitializeList(LIST* pstList);
-int kGetListCount(const LIST* pstList );
-void kAddListToTail(LIST* pstList, void* pvItem );
-void kAddListToHeader(LIST* pstList, void* pvItem );
+int kGetListCount(const LIST* pstList);
+
+void kAddListToTail(LIST* pstList, void* pvItem);
+void kAddListToHeader(LIST* pstList, void* pvItem);
+
 void* kRemoveList(LIST* pstList, QWORD qwID);
 void* kRemoveListFromHeader(LIST* pstList);
-void* kRemoveListFromTail (LIST* pstList );
+void* kRemoveListFromTail (LIST* pstList);
 void* kFindList(const LIST* pstList, QWORD qwID);
 void* kGetHeaderFromList(const LIST* pstList);
-void* kGetTailFromList(const LIST* pstList );
+void* kGetTailFromList(const LIST* pstList);
 void* kGetNextFromList(const LIST* pstList, void* pstCurrent);
 
 #endif

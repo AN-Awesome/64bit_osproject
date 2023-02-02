@@ -157,6 +157,7 @@ void kHelp(const char* pcCommandBuffer) {
         iLength = kStrLen(gs_vstCommandTable[i].pcCommand);
         if(iLength > iMaxCommandLength) iMaxCommandLength = iLength; // Check Code Style plz 
     }
+    iMaxCommandLength += 2;
 
     // Help Output
     for(i = 0; i < iCount; i++) {

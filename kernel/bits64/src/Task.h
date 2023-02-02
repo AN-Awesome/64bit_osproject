@@ -55,15 +55,9 @@ typedef struct kContextStruct {
 
 // TASK Condtion Check Data Structure
 typedef struct kTaskControlBlockStruct {
-    // Next Data Location & ID
-    LISTLINK stLink;
-    // Flag
-    QWORD qwFlags;
-    // Context
-    CONTEXT stContext;
-    // ID, Flag
-    QWORD qwID;
-    QWORD qwFlags;
+    LISTLINK stLink;    // Next Data Location & ID
+    QWORD qwFlags;      // Flag
+    CONTEXT stContext; // Context
 
     // Stack Address & Size
     void* pvStackAddress;
@@ -98,7 +92,7 @@ void kInitializeTCBPool(void);
 TCB* kAllocateTCB(void);
 void kFreeTCB(QWORD qwID);
 TCB* kCreateTask(QWORD qwFlags, QWORD qwEntryPointAddress);
-void kSetUpTask(TCB* pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void* pvStackAddress, QWORD, qwStackSize);
+void kSetUpTask(TCB* pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void* pvStackAddress, QWORD qwStackSize);
 
 //===================
 // Scheduler-related
@@ -112,4 +106,5 @@ void kSchedule(void);
 BOOL kScheduleInInterrupt(void);
 void kDecreaseProcessorTime(void);
 BOOL kIsProcessorTimeExpired(void);
+
 #endif

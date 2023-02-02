@@ -324,30 +324,6 @@ void kShowDateAndTime(const char* pcParameterBuffer) {
 static TCB gs_vstTask[2] = {0, };
 static QWORD gs_vstStack[1024] = {0, };
 
-void kCreateTestTask(const char* pcParameterBuffer) {
-    PARAMETERLIST stList;
-    char vcType[30];
-    char vcCount[30];
-    int i;
-
-    // Extract Params
-    kInitializeParameter(&stList, pcParameterBuffer);
-    kGetNextParameter(&stList, vcType);
-    kGetNextParameter(&stList, vcCount);
-
-    switch(kAToI(vcType, 10)) {
-        case 1:
-            for(i = 0; i < kAToI(vcCount, 10); i++) if(kCreateTask(0, (QWORD)kTestTask1) == NULL) break;
-            kPrintf("Task1 %d Created\n", i);
-            break;
-
-        case 2:
-            for(i = 0; i < kAToI(vcCount, 10); i++) if(kCreateTask(0, (QWORD)kTestTask2) == NULL) break;
-            kPrintf("Task2 %d Created\n", i);
-            break;
-    }
-}
-
 void kTestTask1(void) {
     BYTE bData;
     int i = 0, iX = 0, iY = 0, iMargin;
@@ -409,3 +385,28 @@ void kTestTask2(void) {
         kSchedule();
     }
 }
+
+void kCreateTestTask(const char* pcParameterBuffer) {
+    PARAMETERLIST stList;
+    char vcType[30];
+    char vcCount[30];
+    int i;
+
+    // Extract Params
+    kInitializeParameter(&stList, pcParameterBuffer);
+    kGetNextParameter(&stList, vcType);
+    kGetNextParameter(&stList, vcCount);
+
+    switch(kAToI(vcType, 10)) {
+        case 1:
+            for(i = 0; i < kAToI(vcCount, 10); i++) if(kCreateTask(0, (QWORD)kTestTask1) == NULL) break;
+            kPrintf("Task1 %d Created\n", i);
+            break;
+
+        case 2:
+            for(i = 0; i < kAToI(vcCount, 10); i++) if(kCreateTask(0, (QWORD)kTestTask2) == NULL) break;
+            kPrintf("Task2 %d Created\n", i);
+            break;
+    }
+}
+

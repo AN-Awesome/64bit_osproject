@@ -2,7 +2,7 @@
 #include "Descriptor.h"
 
 static SCHEDULER gs_stScheduler;
-static TCBPOOLMANAGER gs_stTCBPoolmanager;
+static TCBPOOLMANAGER gs_stTCBPoolManager;
 
 //==========================
 // Task Pool & Task-related
@@ -26,7 +26,7 @@ TCB* kAllocateTCB(void) {
     TCB* pstEmptyTCB;
     int i;
 
-    if(gs_stTCBPoolManager.iUSeCount == gs_stTCBPoolManager.iMaxCount) return NULL;
+    if(gs_stTCBPoolManager.iUseCount == gs_stTCBPoolManager.iMaxCount) return NULL;
     
     for(i = 0; i < gs_stTCBPoolManager.iMaxCount; i++) {
         // Unallocated TCB if ID's Upper 32 bit is 0
@@ -49,7 +49,7 @@ void kFreeTCB(QWORD qwID) {
     i = qwID & 0xFFFFFFFF;
 
     // Init TCB & Set ID
-    kMemSet( &(gs_stTCBPoolManager.pstStartAddreess[i].stContext), 0, sizeof(CONTEXT));
+    kMemSet( &(gs_stTCBPoolManager.pstStartAddress[i].stContext), 0, sizeof(CONTEXT));
     gs_stTCBPoolManager.pstStartAddress[i].stLink.qwID = i;
 
     gs_stTCBPoolManager.iUseCount--;
@@ -57,22 +57,27 @@ void kFreeTCB(QWORD qwID) {
 
 // Create Task
 // Stack auto Allocate from Stack Pool according to Task ID
-TCB* kCreatTask(QWORD qwFlags, QWORD qwEntryPointAddress) {
+TCB* kCreateTask(QWORD qwFlags, QWORD qwEntryPointAddress) {
     TCB* pstTask;
     void* pvStackAddress;
     pstTask = kAllocateTCB();
     if(pstTask == NULL) return NULL;
+
     // Calculate Stack Address with Task ID, Lower 32 bit act as offset of Stack Pool
-     pvStackAddress = (void*)(TASK_STACKPOOLADDRESS + (TASK_STACKSIZE * (pstTask->stLink.qwID & 0xFFFFFFFF)));
+    pvStackAddress = (void*)(TASK_STACKPOOLADDRESS + (TASK_STACKSIZE * (pstTask->stLink.qwID & 0xFFFFFFFF)));
     // Set up TCB and insert it into the list so it can be Scheduled
-    kSetUpTask(pstTask, qwFlags, qwEntryPointAddress, pvStackaddress, TASK_STACKSIZE);
+    kSetUpTask(pstTask, qwFlags, qwEntryPointAddress, pvStackAddress, TASK_STACKSIZE);
     kAddTaskToReadyList(pstTask);
     return pstTask;
 }
+
+/*
 // Use Parameter to set TCB
 void kSetupTask(TCB* pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void* pvStackAddress, QWORD qwStackSize) {
     // 생략된 부분 부록 파일 Task.c 참조
 }
+
+*/
 
 //===================
 // Scheduler-related
@@ -96,7 +101,7 @@ TCB* kGetRunningTask(void) {
     return gs_stScheduler.pstRunningTask;
 }
 // Get Next Task to Run from Task List
-TCB* kGetNextTasktoRun(void) {
+TCB* kGetNextTaskToRun(void) {
     if(kGetListCount( &(gs_stScheduler.stReadyList)) == 0) return NULL;
     return(TCB*)kRemoveListFromHeader( &(gs_stScheduler.stReadyList));
 }
@@ -144,7 +149,7 @@ BOOL kScheduleInInterrupt(void) {
     pstRunningTask = gs_stScheduler.pstRunningTask;
     kMemCpy( &(pstRunningTask->stContext), pcContextAddress, sizeof(CONTEXT));
     kAddTaskToReadyList(pstRunningTask);
-    gs_stScheduler.pstRunnigTask = pstNextTask;
+    gs_stScheduler.pstRunningTask = pstNextTask;
     kMemCpy(pcContextAddress, &(pstNextTask->stContext), sizeof(CONTEXT));
 
     // Update Processor Using Time
@@ -152,7 +157,7 @@ BOOL kScheduleInInterrupt(void) {
     return TRUE;
 }
 // Decrease Processor Time
-void kDecreasseProcessorTime(void) {
+void kDecreaseProcessorTime(void) {
     if(gs_stScheduler.iProcessorTime > 0) gs_stScheduler.iProcessorTime--;
 }
 // Return whether Processor is out of time to use
@@ -162,7 +167,7 @@ BOOL kIsProcessorTimeExpired(void) {
 }
 
 // Set TCB using Parameter
-void kSetUpTask(TCB* pstTCB, QWORD qwID, QWORD qwFlags, QWORD qwEntryPointAddress, void* pvStackAddress, QWORD qwStackSize) {
+void kSetUpTask(TCB* pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void* pvStackAddress, QWORD qwStackSize) {
     // Init Context
     kMemSet(pstTCB->stContext.vqRegister, 0, sizeof(pstTCB->stContext.vqRegister));
     // Set RSP, RBP Register related on Stack
@@ -180,8 +185,7 @@ void kSetUpTask(TCB* pstTCB, QWORD qwID, QWORD qwFlags, QWORD qwEntryPointAddres
     // Enable Interrupt by setting IF bit (bit 9) of RFLAGS Register to 1.
     pstTCB->stContext.vqRegister[TASK_RFLAGSOFFSET] |= 0x0200;
 
-    // Save ID, Stack, Flag
-    pstTCB->qwID = qwID;
+    // Stack, Flag
     pstTCB->pvStackAddress = pvStackAddress;
     pstTCB->qwStackSize = qwStackSize;
     pstTCB->qwFlags = qwFlags;

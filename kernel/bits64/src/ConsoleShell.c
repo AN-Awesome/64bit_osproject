@@ -4,14 +4,16 @@
 #include "Utility.h"
 #include "PIT.h"
 #include "RTC.h"
+#include "Task.h"
 #include "AssemblyUtility.h"
 #include "TextColor.h"
+#include "ConsoleEster.h"
 
 // Command Table def.
 SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"help", "Show Help", kHelp},
     {"cls", "Clear Screen", kCls},
-    {"totalram", "Show Total RAM Size", kShowTotalRAMSize},
+    {"ram", "Show Total RAM Size", kShowTotalRAMSize},
     {"strtod", "String To Decial/Hex Convert", kStringToDecimalHexTest},
     {"shutdown", "Shutdown And Reboot OS", kShutdown},
 
@@ -19,7 +21,8 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"wait", "Wait ms Using PIT, ex)wait 100(ms)",  kWaitUsingPIT},
     {"rdtsc", "Read Time Stamp Counter", kReadTimeStampCounter},
     {"cpuspeed", "Measure Processor Speed", kMeasureProcessorSpeed},
-    {"now", "Show Date And Time", kShowDateAndTime}
+    {"now", "Show Date And Time", kShowDateAndTime},
+    {"dev", "Show Project Members", KShowTeamMember}
 };
 
 //==============
@@ -36,7 +39,7 @@ void kStartConsoleShell(void) {
     // Prompt Output
     kSetColor(PINK_BR);
     kPrintf("%s", CONSOLESHELL_PROMPTMESSAGE);
-    
+
     kSetColor(WHITE);
     kPrintf("%s", CONSOLESHELL_SPLIT);
 
@@ -141,9 +144,8 @@ void kHelp(const char* pcCommandBuffer) {
     int iLength, iMaxCommandLength = 0;
 
     kSetColor(BROWN);
-    kPrintf("\n");
 
-    kPrintf(" =====================================\n");
+    kPrintf("\n =====================================\n");
     kPrintf("         Awesome OS SHELL Help        \n");
     kPrintf(" =====================================\n");
 
@@ -172,7 +174,8 @@ void kCls(const char* pcParameterBuffer) {
 
 // Total Memory Size Output
 void kShowTotalRAMSize(const char* pcParameterBuffer) {
-    kPrintf( "Total RAM Size = %d MB\n", kGetTotalRAMSize());
+    kSetColor(SKY);
+    kPrintf("\n Total RAM Size = %d MB\n", kGetTotalRAMSize());
 }
 
 // Convert String into Number & Output
@@ -191,14 +194,14 @@ void kStringToDecimalHexTest(const char* pcParameterBuffer) {
         iLength = kGetNextParameter(&stList, vcParameter);
         if(iLength == 0) break;
         // Parameter Info Output / Check Hex or Decimal
-        kPrintf("Param %d = '%s', Length = %d, ", iCount + 1, vcParameter, iLength);
+        kPrintf("\n Param %d = '%s', Length = %d, ", iCount + 1, vcParameter, iLength);
         // 0x = Hex, Others = Decimal
         if(kMemCmp(vcParameter, "0x", 2) == 0) {
             lValue = kAToI(vcParameter + 2, 16);
             kPrintf("Hex Value = %q\n", lValue);
         } else {
             lValue = kAToI(vcParameter, 10);
-            kPrintf("Decimal Value = %d\n", lValue);
+            kPrintf("\n Decimal Value = %d\n", lValue);
         }
         iCount++;
     }
@@ -239,7 +242,7 @@ void kSetTimer(const char* pcParameterBuffer) {
     bPeriodic = kAToI(vcParameter, 10);
 
     kInitializePIT(MSTOCOUNT(lValue), bPeriodic);
-    kPrintf("Time = %d ms, Periodic = %d Change Complete\n", lValue, bPeriodic);
+    kPrintf("\n Time = %d ms, Periodic = %d Change Complete\n", lValue, bPeriodic);
 }
 
 void kWaitUsingPIT(const char* pcParameterBuffer) {
@@ -273,7 +276,8 @@ void kReadTimeStampCounter(const char* pcParameterBuffer) {
     QWORD qwTSC;
 
     qwTSC = kReadTSC();
-    kPrintf(" Time Stamp Counter = %q\n", qwTSC);
+    kSetColor(GREEN);
+    kPrintf("\n Time Stamp Counter = %q\n", qwTSC);
 }
 
 void kMeasureProcessorSpeed(const char* pcParameterBuffer) {
@@ -291,9 +295,13 @@ void kMeasureProcessorSpeed(const char* pcParameterBuffer) {
 
         // kPrintf(".");
     }
-
     // Restore Timer
-    kPrintf("\n CPU Speed = %d MHz\n", qwTotalTSC / 10 / 1000 / 1000);
+    kInitializePIT(MSTOCOUNT(1), TRUE);
+    kEnableInterrupt();
+
+    
+    kPrintf(" CPU Speed = %d MHz\n", qwTotalTSC / 10 / 1000 / 1000);
+    
 }
 
 void kShowDateAndTime(const char* pcParameterBuffer) {
@@ -309,4 +317,33 @@ void kShowDateAndTime(const char* pcParameterBuffer) {
 
     kPrintf("\n Date: %d/%d/%d %s\n", wYear, bMonth, bDayOfMonth, kConvertDayOfWeekToString(bDayOfWeek));
     kPrintf(" Time: %d:%d:%d\n", bHour, bMinute, bSecond);
+}
+
+static TCB gs_vstTask[2] = {0, };
+static QWORD gs_vstStack[1024] = {0, };
+
+// Test Switch-Tasks
+void kTestTask(void) {
+    int i = 0;
+    while(1) {
+        kPrintf("[%d] This message is from kTestTask. Press any key to switch " "kConsoleShell~!!\n", i++);
+        kGetCh();
+
+        kSwitchContext(&(gs_vstTask[1].stContext), &(gs_vstTask[0].stContext));
+    }
+}
+
+void kCreateTestTask(const char* pcParameterBuffer) {
+    KEYDATA stData;
+    int i= 0;
+
+    // Set Task
+    kSetUpTask(&(gs_vstTask[1]), 1, 0, (QWORD)kTestTask, &(gs_vstStack), sizeof(gs_vstStack));
+
+    while(1) {
+        kPrintf("[%d] This message is from kConsoleShell. Press any key to " "switch TestTask~!!\n", i++);
+        if(kGetCh() == 'q') break;
+
+        kSwitchContext(&(gs_vstTask[0].stContext), &(gs_vstTask[1].stContext));
+    }
 }

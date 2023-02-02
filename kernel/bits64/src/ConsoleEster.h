@@ -4,4 +4,6 @@
 #include "TextColor.h"
 #include "Types.h"
 
+void KShowTeamMember(const char* pcCommandBuffer);
+
 #endif

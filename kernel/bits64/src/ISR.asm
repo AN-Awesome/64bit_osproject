@@ -3,6 +3,7 @@ SECTION .text
 
 ; INPUT FUNCTION
 extern kCommonExceptionHandler, kCommonInterruptHandler, kKeyboardHandler
+extern kTimerHandler
 
 ; OUTPUT FUNCTION
 ; Process Exception
@@ -343,7 +344,7 @@ kISRTimer:                      ; INT. NO: 32 - TIMER ISR
     KSAVECONTEXT
 
     mov rdi, 32                     ; SET INTERRUPT NUMBER
-    call kCommonInterruptHandler    ; RUN HANDLER
+    call kTimerHandler              ; RUN HANDLER
 
     KLOADCONTEXT
     iretq

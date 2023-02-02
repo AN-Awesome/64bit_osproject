@@ -1,6 +1,9 @@
 #include "InterruptHandler.h"
 #include "PIC.h"
+#include "Utility.h"
 #include "Keyboard.h"
+#include "Task.h"
+#include "Descriptor.h"
 #include "TextColor.h"
 #include "Console.h"
 
@@ -51,4 +54,30 @@ void kKeyboardHandler(int iVectorNumber) {
     }
     
     kSendEOIToPIC(iVectorNumber - PIC_IRQSTARTVECTOR);
+}
+
+// Handler of Timer Interrupt
+void kTimerHandler(int iVectorNumber) {
+    char vcBuffer[] = "[INT:  , ]";
+    static int g_iTimerInterruptCount = 0;
+
+    // Output Text
+    vcBuffer[5] = '0' + iVectorNumber / 10;
+    vcBuffer[6] = '0' + iVectorNumber % 10;
+
+    // Count
+    vcBuffer[8] = '0' + g_iTimerInterruptCount;
+    g_iTimerInterruptCount = (g_iTimerInterruptCount + 1) % 10;
+    kPrintStringXY(70, 2, vcBuffer, GREEN);
+
+    kSendEOIToPIC(iVectorNumber - PIC_IRQSTARTVECTOR);
+
+    // Increment
+    g_qwTickCount++;
+
+    // Reduce use time
+    kDecreaseProcessorTime();
+
+    // Switch Task(Next Period Time__TASK)
+    if(kIsProcessorTimeExpired() == TRUE) kScheduleInInterrupt();
 }

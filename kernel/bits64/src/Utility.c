@@ -2,6 +2,9 @@
 #include "AssemblyUtility.h"
 #include <stdarg.h>
 
+// Counter(PIT)
+volatile QWORD g_qwTickCount = 0;
+
 void kMemSet(void* pvDestination, BYTE bData, int iSize) {
     int i;
     for (i = 0; i < iSize; i++) ((char*)pvDestination)[i] = bData;

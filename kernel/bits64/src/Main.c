@@ -3,15 +3,17 @@
 #include "Descriptor.h"
 #include "TextColor.h"
 #include "PIC.h"
+#include "PIT.h"
 #include "ConsoleShell.h"
 #include "Console.h"
+#include "Task.h"
 
 void kPrintString(int iX, int iY, const char* pcString, int color);
 
 void Main(void) {
     int iCursorX, iCursorY;
 
-    kInitializeConsole(0, 0);
+    kInitializeConsole(0, 2);
     kGetCursor(&iCursorX, &iCursorY);
 
     kInitializeGDTTableAndTSS();
@@ -25,6 +27,9 @@ void Main(void) {
     kCheckTotalRAMSize();
     kSetCursor(1, 3);
     kPrintf("RAM Size = %d MB\n", kGetTotalRAMSize());
+
+    kInitializeScheduler();
+    kInitializePIT(MSTOCOUNT(1), 1);
 
     if(kInitializeKeyboard() == TRUE) kChangeKeyboardLED(FALSE, FALSE, FALSE);
     else while(1);

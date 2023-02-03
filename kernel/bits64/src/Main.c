@@ -13,7 +13,7 @@ void kPrintString(int iX, int iY, const char* pcString, int color);
 void Main(void) {
     int iCursorX, iCursorY;
 
-    kInitializeConsole(0, 5);
+    kInitializeConsole(0, 2);
     kGetCursor(&iCursorX, &iCursorY);
 
     kInitializeGDTTableAndTSS();

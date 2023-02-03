@@ -387,7 +387,7 @@ static void kTestTask2(void) {
         pstScreen[iOffset].bAttribute = (iOffset % 15) + 1;
         i++;
 
-        //kSchedule();
+        // kSchedule();
     }
 }
 
@@ -441,7 +441,7 @@ static void kShowTaskList(const char* pcParameterBuffer) {
     TCB* pstTCB;
     int iCount = 0;
 
-    kPrint( "======== Task Total Conut [%d] ========\n", kGetTaskCount());
+    kPrintf( "======== Task Total Conut [%d] ========\n", kGetTaskCount());
     for(i = 0; i < TASK_MAXCOUNT; i++) {
         // Obtain TCB and output ID if TCB is in use
         pstTCB = kGetTCBInTCBPool(i);
@@ -471,7 +471,7 @@ static void kKillTask(const char* pcParameterBuffer) {
     kGetNextParameter(&stList, vcID);
 
     // Exit Task
-    if(kMemCMP(vcID, "0x", 2) == 0) qwID = kAToI(vcID + 2, 16);
+    if(kMemCmp(vcID, "0x", 2) == 0) qwID = kAToI(vcID + 2, 16);
     else qwID = kAToI(vcID, 10);
     kPrintf("Kill Task ID [0x%q] ", qwID);
     if(kEndTask(qwID) == TRUE) kPrintf("Success\n");
@@ -479,7 +479,7 @@ static void kKillTask(const char* pcParameterBuffer) {
 }
 // Process Usage Rate
 static void kCPULoad(const char* pcParameterBuffer) {
-    kPrintf("Processor Load : %d%%\n, kGetProcessorLoad()");
+    kPrintf("Processor Load : %d%%\n", kGetProcessorLoad());
 }
 
 

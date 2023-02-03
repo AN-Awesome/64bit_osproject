@@ -111,15 +111,6 @@ void kSetRunningTask(TCB* pstTask) {
 TCB* kGetRunningTask(void) {
     return gs_stScheduler.pstRunningTask;
 }
-// Get Next Task to Run from Task List
-TCB* kGetNextTaskToRun(void) {
-    if(kGetListCount( &(gs_stScheduler.stReadyList)) == 0) return NULL;
-    return(TCB*)kRemoveListFromHeader( &(gs_stScheduler.stReadyList));
-}
-// Insert Task to Scheduler Ready List
-void kAddTaskToReadyList(TCB* pstTask) {
-    kAddListToTail( &(gs_stScheduler.stReadyList), pstTask);
-}
 
 // Get the next task to run in the task list
 TCB* kGetNextTaskToRun(void) {
@@ -168,7 +159,7 @@ TCB* kRemoveTaskFromReadyList(QWORD qwTaskID) {
 
     // Find the TCB of the task in the TCB pool and check if the ID actually matches
     pstTarget = &(gs_stTCBPoolManager.pstStartAddress[GETTCBOFFSET(qwTaskID)]);
-    if(pstTarget->stLink.qwID != qwTaskID) return NULL
+    if(pstTarget->stLink.qwID != qwTaskID) return NULL;
 
     // Remove a task from the ready list where the task exists
     bPriority = GETPRIORITY(pstTarget->qwFlags);
@@ -314,7 +305,7 @@ BOOL kEndTask(QWORD qwTaskID) {
     // If the task is currently running, set the EndTask bit and switch the task.
     pstTarget = gs_stScheduler.pstRunningTask;
     if(pstTarget->stLink.qwID == qwTaskID) {
-        pstTarget->qwFlags |= TASK_FLAG_ENDTASK;
+        pstTarget->qwFlags |= TASK_FLAGS_ENDTASK;
         SETPRIORITY(pstTarget->qwFlags, TASK_FLAGS_WAIT);
 
         kSchedule();
@@ -334,7 +325,7 @@ BOOL kEndTask(QWORD qwTaskID) {
         }
         pstTarget->qwFlags |= TASK_FLAGS_ENDTASK;
         SETPRIORITY(pstTarget->qwFlags, TASK_FLAGS_WAIT);
-        kAddListToTail(&(gs_stScheduler,stWaitList), pstTarget);
+        kAddListToTail(&(gs_stScheduler.stWaitList), pstTarget);
     }
     return TRUE;
 }

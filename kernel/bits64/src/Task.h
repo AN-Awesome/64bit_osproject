@@ -86,6 +86,7 @@ typedef struct kTaskControlBlockStruct {
     void* pvStackAddress;
     QWORD qwStackSize;
 } TCB;
+
 // TCB Pool Status Manage DataStruct
 typedef struct kTCBPoolManagerStruct {
     // Task Pool Info.
@@ -96,16 +97,15 @@ typedef struct kTCBPoolManagerStruct {
     // TCB Allocated Numbers
     int iAllocatedCount;
 } TCBPOOLMANAGER;
+
 // Scheduler Status Manage DataStructure
 typedef struct kSchedulerStruct {
-    // Current Perform Task
-    TCB* pstRunningTask;
-    // Processor time that Current Perform Task can use
-    int iProcessorTime;
-    
-    
+    TCB* pstRunningTask;    // Current Perform Task
+    int iProcessorTime;     // Processor time that Current Perform Task can use
+
     LIST vstReadyList[TASK_MAXREADYLISTCOUNT];  // List of preparing tasks to be executed, sorted according to task priority
     LIST stWaitList;                            // List of waiting tasks to be terminated
+
     int viExecuteCount[TASK_MAXREADYLISTCOUNT]; // A data structure that stores the number of times a task has been executed for each priority.
     QWORD qwProcessorLoad;                      // Data structure for calculating processor load
     QWORD qwSpendProcessorTimeInIdleTask;       // Processor time used by idle tasks
@@ -129,7 +129,8 @@ void kInitializeScheduler(void);
 void kSetRunningTask(TCB* pstTask);
 TCB* kGetRunningTask(void);
 TCB* kGetNextTaskToRun(void);
-void kAddTaskToReadyList(TCB* pstTask);
+BOOL kAddTaskToReadyList(TCB* pstTask);
+
 void kSchedule(void);
 BOOL kScheduleInInterrupt(void);
 void kDecreaseProcessorTime(void);

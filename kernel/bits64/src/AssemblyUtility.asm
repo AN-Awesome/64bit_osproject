@@ -7,6 +7,7 @@ global kInPortByte, kOutPortByte, kLoadGDTR, kLoadTR, kLoadIDTR
 global kEnableInterrupt, kDisableInterrupt, kReadRFLAGS
 global kReadTSC
 global kSwitchContext
+global kHlt
 
 ; Read 1 byte to the port
 ; PARAM: WORD wPort
@@ -176,9 +177,16 @@ kSwitchContext:
 
     KSAVECONTEXT
 
-.LoadContext:
-    mov rsp, rsi
-    
-    ; restore Register from Context data structure
-    KLOADCONTEXT
-    iretq
+    .LoadContext:
+        mov rsp, rsi
+        
+        ; restore Register from Context data structure
+        KLOADCONTEXT
+        iretq
+
+; Params: void
+; Make CPU to State.IDLE
+kHlt:
+    hlt
+    hlt
+    ret

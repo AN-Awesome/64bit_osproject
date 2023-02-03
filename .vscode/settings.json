@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "consoleester.h": "c"
+        "consoleester.h": "c",
+        "utility.h": "c"
     }
 }

@@ -407,12 +407,12 @@ static void kCreateTestTask(const char* pcParameterBuffer) {
     switch(kAToI(vcType, 10)) {
         case 1:
             for(i = 0; i < kAToI(vcCount, 10); i++) if(kCreateTask(TASK_FLAGS_LOW, (QWORD)kTestTask1) == NULL) break;
-            kPrintf("Task1 %d Created\n", i);
+            kPrintf(" Task1 %d Created\n", i);
             break;
 
         case 2:
             for(i = 0; i < kAToI(vcCount, 10); i++) if(kCreateTask(TASK_FLAGS_LOW, (QWORD)kTestTask2) == NULL) break;
-            kPrintf("Task2 %d Created\n", i);
+            kPrintf(" Task2 %d Created\n", i);
             break;
     }
 }
@@ -512,17 +512,17 @@ static void kPrintNumberTask(void) {
     // Output Num around the Loop
     for(i = 0; i < 5; i++) {
         kLock( &(gs_stMutex));
-        kPrintf("Task ID [0x%Q VAlue[%d]\n", kGetRunningTask()->stLink.qwID, gs_qwAdder);
+        kPrintf("Task ID [0x%Q Value[%d]\n", kGetRunningTask()->stLink.qwID, gs_qwAdder);
 
         gs_qwAdder += 1;
-        kUnlock( &(gs_stMutex));
+        kUnlock(&(gs_stMutex));
         // Code added to increase processor consumption
         for(j = 0; j < 30000; j++);
     }
 
     // Wait about 1sec until All Task Shutdown
     qwTickCount = kGetTickCount();
-    while((kGetTickCount() - qwTickCount) < 1000 ) kSchedule();
+    while((kGetTickCount() - qwTickCount) < 1000) kSchedule();
 
     // Exit Task
     kExitTask();
@@ -536,7 +536,9 @@ static void kTestMutex(const char* pcParameterBuffer) {
     kInitializeMutex(&gs_stMutex);
     for(i = 0; i < 3; i++) kCreateTask(TASK_FLAGS_LOW, (QWORD) kPrintNumberTask);
     kPrintf("Wait Util %d Task End...\n", i);
-    kGetCh();
+    // kGetCh();
+
+    kExitTask();
 }
 
 

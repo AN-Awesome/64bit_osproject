@@ -38,6 +38,8 @@ void Main(void) {
     kMaskPICInterrupt(0);
 
     kEnableInterrupt();
+
+    kCreateTask(TASK_FLAGS_LOWEST | TASK_FLAGS_IDLE, (QWORD)kIdleTask);
     kStartConsoleShell();
 }
 

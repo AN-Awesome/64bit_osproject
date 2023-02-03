@@ -23,7 +23,7 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"cpuspeed", "Measure Processor Speed", kMeasureProcessorSpeed},
     {"now", "Show Date And Time", kShowDateAndTime},
     {"dev", "Show Project Members", KShowTeamMember},
-    {"createtask", "Create Task, ex)createtask 1(type 10(count)", kCreateTestTask}
+    {"createtask", "Create Task, ex)createtask 1(type 10(count))", kCreateTestTask}
 };
 
 //==============

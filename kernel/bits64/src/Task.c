@@ -8,7 +8,7 @@ static TCBPOOLMANAGER gs_stTCBPoolManager;
 // Task Pool & Task-related
 //==========================
 // Init Task Pool
-void kInitializeTCBPool(void) {
+static void kInitializeTCBPool(void) {
     int i;
     kMemSet(&(gs_stTCBPoolManager), 0, sizeof(gs_stTCBPoolManager));
     
@@ -22,7 +22,7 @@ void kInitializeTCBPool(void) {
     gs_stTCBPoolManager.iAllocatedCount = 1;
 }
 // Allocate TCB
-TCB* kAllocateTCB(void) {
+static TCB* kAllocateTCB(void) {
     TCB* pstEmptyTCB;
     int i;
 
@@ -43,7 +43,7 @@ TCB* kAllocateTCB(void) {
     return pstEmptyTCB;
 }
 // Clear TCB
-void kFreeTCB(QWORD qwID) {
+static void kFreeTCB(QWORD qwID) {
     int i;
     // Lower 32 bit of Task ID act as Index
     i = GETTCBOFFSET(qwID);
@@ -60,14 +60,27 @@ void kFreeTCB(QWORD qwID) {
 TCB* kCreateTask(QWORD qwFlags, QWORD qwEntryPointAddress) {
     TCB* pstTask;
     void* pvStackAddress;
+    BOOL bPreviousFlag;
+
+    bPreviousFlag = kLockForSystemData();
+
     pstTask = kAllocateTCB();
-    if(pstTask == NULL) return NULL;
+    if(pstTask == NULL) {
+        kUnlockForSystemData(bPreviousFlag);
+        return NULL;
+    }
+    kUnlockForSystemData(bPreviousFlag);
+
 
     // Calculate Stack Address with Task ID, Lower 32 bit act as offset of Stack Pool
     pvStackAddress = (void*)(TASK_STACKPOOLADDRESS + (TASK_STACKSIZE * GETTCBOFFSET(pstTask->stLink.qwID)));
     // Set up TCB and insert it into the list so it can be Scheduled
     kSetUpTask(pstTask, qwFlags, qwEntryPointAddress, pvStackAddress, TASK_STACKSIZE);
-    kAddTaskToReadyList(pstTask);
+
+    bPreviousFlag = kLockForSystemData();   // EntryPoint
+    kAddTaskToReadyList(pstTask);           // Add Task to Read List
+    kUnlockForSystemData(bPreviousFlag);    // EndPoint
+
     return pstTask;
 }
 
@@ -105,15 +118,24 @@ void kInitializeScheduler(void) {
 }
 // Set Current Perform Task
 void kSetRunningTask(TCB* pstTask) {
+    BOOL bPreviousFlag;
+
+    bPreviousFlag = kLockForSystemData();       // EntryPoint
     gs_stScheduler.pstRunningTask = pstTask;
+    kUnlockForSystemData(bPreviousFlag);        // EndPoint
 }
 // Return Current Perform Task
 TCB* kGetRunningTask(void) {
-    return gs_stScheduler.pstRunningTask;
+    BOOL bPreviouisFlag;
+    TCB *pstRunningTask;
+
+    bPreviouisFlag = kLockForSystemData();              // EntryPoint
+    pstRunningTask = gs_stScheduler.pstRunningTask;
+    kUnlockForSystemData(bPreviouisFlag);               // Endoint
 }
 
 // Get the next task to run in the task list
-TCB* kGetNextTaskToRun(void) {
+static TCB* kGetNextTaskToRun(void) {
     TCB* pstTarget = NULL;
     int iTaskCount, i, j ;
 
@@ -139,7 +161,7 @@ TCB* kGetNextTaskToRun(void) {
 }
 
 // Insert the task into the scheduler's ready list
-BOOL kAddTaskToReadyList(TCB* pstTask) {
+static BOOL kAddTaskToReadyList(TCB* pstTask) {
     BYTE bPriority;
 
     bPriority = GETPRIORITY(pstTask->qwFlags);
@@ -150,7 +172,7 @@ BOOL kAddTaskToReadyList(TCB* pstTask) {
 }
 
 // Remove task from ready queue
-TCB* kRemoveTaskFromReadyList(QWORD qwTaskID) {
+static TCB* kRemoveTaskFromReadyList(QWORD qwTaskID) {
     TCB* pstTarget;
     BYTE bPriority;
 
@@ -171,8 +193,11 @@ TCB* kRemoveTaskFromReadyList(QWORD qwTaskID) {
 // Change the priority of a task
 BOOL kChangePriority(QWORD qwTaskID, BYTE bPriority) {
     TCB* pstTarget;
+    BOOL bPreviousFlag;
 
     if(bPriority > TASK_MAXREADYLISTCOUNT) return FALSE;
+
+    bPreviousFlag = kLockForSystemData();   // EntryPoint
 
     // If the task is currently running, only change the priority
     // When an interrupt (IRQ 0) of the PIT controller occurs and task switching is performed, move to the list of changed priorities.
@@ -191,7 +216,8 @@ BOOL kChangePriority(QWORD qwTaskID, BYTE bPriority) {
                 kAddTaskToReadyList(pstTarget);
             }
         }
-    }    
+    }
+    kUnlockForSystemData(bPreviousFlag);    // EndPoint
     return TRUE;
 }
 
@@ -202,11 +228,14 @@ void kSchedule(void) {
     BOOL bPreviousFlag;
     // Need Task to Switch to
     if(kGetReadyTaskCount() < 1) return;
+
+
     // Prevent Interrupt during switchover which is troublesome if the task switchover occurs again
-    bPreviousFlag = kSetInterruptFlag(FALSE);
+    bPreviousFlag = kLockForSystemData();   // EntryPoint
+
     pstNextTask = kGetNextTaskToRun();
     if(pstNextTask == NULL) {
-        kSetInterruptFlag(bPreviousFlag);
+        kUnlockForSystemData(bPreviousFlag); // EndPoint
         return;
     }
     pstRunningTask = gs_stScheduler.pstRunningTask;
@@ -216,7 +245,7 @@ void kSchedule(void) {
     if((pstRunningTask->qwFlags & TASK_FLAGS_IDLE) == TASK_FLAGS_IDLE) gs_stScheduler.qwSpendProcessorTimeInIdleTask += TASK_PROCESSORTIME - gs_stScheduler.iProcessorTime;
 
     // If the task end flag is set, the context does not need to be saved, so insert into the waiting list and switch the context
-    if( pstRunningTask->qwFlags & TASK_FLAGS_ENDTASK ) {
+    if(pstRunningTask->qwFlags & TASK_FLAGS_ENDTASK) {
         kAddListToTail(&(gs_stScheduler.stWaitList), pstRunningTask);
         kSwitchContext(NULL, &(pstNextTask->stContext));
     } else {
@@ -226,16 +255,22 @@ void kSchedule(void) {
 
     // Update Processor Using time
     gs_stScheduler.iProcessorTime = TASK_PROCESSORTIME;
-    kSetInterruptFlag(bPreviousFlag);
+    kUnlockForSystemData(bPreviousFlag);
 }
 // Find another Task and Switch when Interrupt Occured
 BOOL kScheduleInInterrupt(void) {
     TCB* pstRunningTask, *pstNextTask;
     char* pcContextAddress;
+    BOOL bPreviousFlag;
+
+    bPreviousFlag = kLockForSystemData();       // EntryPoint
 
     // Exit if there is no Task to Switch
     pstNextTask = kGetNextTaskToRun();
-    if(pstNextTask == NULL) return FALSE;
+    if(pstNextTask == NULL) {
+        kUnlockForSystemData(bPreviousFlag);    // EndPoint
+        return FALSE;
+    }
 
     //==============
     // Task Switch
@@ -255,7 +290,9 @@ BOOL kScheduleInInterrupt(void) {
         kAddTaskToReadyList(pstRunningTask);
     }
 
-    // 전환해서 실행할 태스크를 Running Task로 설정하고 콘텍스트를 IST에 복사해서 자동으로 태스크 전환이 일어나도록 함
+    kUnlockForSystemData(bPreviousFlag);    // EndPoint
+
+    // Set the task to be switched and executed as Running Task and copy the context to IST so that task switching occurs automatically
     kMemCpy(pcContextAddress, &(pstNextTask->stContext), sizeof(CONTEXT));
 
     // Update Processor Using Time
@@ -273,7 +310,7 @@ BOOL kIsProcessorTimeExpired(void) {
 }
 
 // Set TCB using Parameter
-void kSetUpTask(TCB* pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void* pvStackAddress, QWORD qwStackSize) {
+static void kSetUpTask(TCB* pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void* pvStackAddress, QWORD qwStackSize) {
     // Init Context
     kMemSet(pstTCB->stContext.vqRegister, 0, sizeof(pstTCB->stContext.vqRegister));
     // Set RSP, RBP Register related on Stack
@@ -301,12 +338,17 @@ void kSetUpTask(TCB* pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void* pvS
 BOOL kEndTask(QWORD qwTaskID) {
     TCB* pstTarget;
     BYTE bPriority;
+    BOOL bPreviousFlag;
+
+    bPreviousFlag = kLockForSystemData();   // EntryPoint
 
     // If the task is currently running, set the EndTask bit and switch the task.
     pstTarget = gs_stScheduler.pstRunningTask;
     if(pstTarget->stLink.qwID == qwTaskID) {
         pstTarget->qwFlags |= TASK_FLAGS_ENDTASK;
         SETPRIORITY(pstTarget->qwFlags, TASK_FLAGS_WAIT);
+
+        kUnlockForSystemData(bPreviousFlag);    // EndPoint
 
         kSchedule();
 
@@ -321,7 +363,8 @@ BOOL kEndTask(QWORD qwTaskID) {
                 pstTarget->qwFlags |= TASK_FLAGS_ENDTASK;
                 SETPRIORITY(pstTarget->qwFlags, TASK_FLAGS_WAIT);
             }
-            return FALSE;
+            kUnlockForSystemData(bPreviousFlag);    // EndPoint
+            return TRUE;
         }
         pstTarget->qwFlags |= TASK_FLAGS_ENDTASK;
         SETPRIORITY(pstTarget->qwFlags, TASK_FLAGS_WAIT);
@@ -348,11 +391,16 @@ int kGetReadyTaskCount(void) {
 // Returns the total number of tasks
 int kGetTaskCount(void) {
     int iTotalCount;
+    BOOL bPreviousCount;
 
     // After getting the number of tasks in the ready queue, add the number of tasks in the waiting queue and the number of currently running tasks.
     iTotalCount = kGetReadyTaskCount();
+
+    bPreviousCount = kLockForSystemData();  // EntryPoint
+
     iTotalCount += kGetListCount(&(gs_stScheduler.stWaitList)) + 1;
 
+    kUnlockForSystemData(bPreviousCount);   // EndPoint
     return iTotalCount;
 }
 
@@ -385,6 +433,8 @@ void kIdleTask(void) {
     TCB* pstTask;
     QWORD qwLastMeasureTickCount, qwLastSpendTickInIdleTask;
     QWORD qwCurrentMeasureTickCount, qwCurrentSpendTickInIdleTask;
+    QWORD qwTaskID;
+    BOOL bPreviousFlag;
 
     // Stores baseline information for calculating processor usage
     qwLastSpendTickInIdleTask = gs_stScheduler.qwSpendProcessorTimeInIdleTask;
@@ -410,11 +460,17 @@ void kIdleTask(void) {
         // If there is a task waiting in the wait queue, terminate the task
         if(kGetListCount(&(gs_stScheduler.stWaitList)) >= 0) {
             while(1) {
+                bPreviousFlag = kLockForSystemData();   // EntryPoint
                 pstTask = kRemoveListFromHeader(&(gs_stScheduler.stWaitList));
-                if(pstTask == NULL) break;
+                if(pstTask == NULL) {
+                    kUnlockForSystemData(bPreviousFlag);    // EndPoint
+                    break;
+                }
+                qwTaskID = pstTask->stLink.qwID;
+                kFreeTCB(qwTaskID);
 
+                kUnlockForSystemData(bPreviousFlag);    // EndPoint
                 kPrintf( "IDLE: Task ID is completely ended. \n", pstTask->stLink.qwID);
-                kFreeTCB(pstTask->stLink.qwID);
             }
         }
         kSchedule();
@@ -430,7 +486,5 @@ void kHaltProcessorByLoad(void) {
     } else if(gs_stScheduler.qwProcessorLoad < 80) {
         kHlt();
         kHlt();
-    } else if(gs_stScheduler.qwProcessorLoad < 95) {
-        kHlt();
-    }
+    } else if(gs_stScheduler.qwProcessorLoad < 95) kHlt();
 }

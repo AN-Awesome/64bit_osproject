@@ -7,6 +7,7 @@ global kInPortByte, kOutPortByte, kLoadGDTR, kLoadTR, kLoadIDTR
 global kEnableInterrupt, kDisableInterrupt, kReadRFLAGS
 global kReadTSC
 global kSwitchContext
+global kHlt
 
 ; Read 1 byte to the port
 ; PARAM: WORD wPort
@@ -182,3 +183,10 @@ kSwitchContext:
     ; restore Register from Context data structure
     KLOADCONTEXT
     iretq
+
+; Params: void
+; Switch Mode of Task to IDLE
+kHlt:
+    hlt
+    hlt
+    ret

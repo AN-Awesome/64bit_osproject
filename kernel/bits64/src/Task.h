@@ -45,6 +45,29 @@
 #define TASK_INVALIDID      0xFFFFFFFFFFFFFFFF
 // Maximum amount Processor time Task can use(5ms)
 #define TASK_PROCESSORTIME  5
+
+
+// number of ready lists
+#define TASK_MAXREADYLISTCOUNT 5
+
+// Task priority
+#define TASK_FLAGS_HIGHEST  0
+#define TASK_FLAGS_HIGH     1
+#define TASK_FLAGS_MEDIUM   2
+#define TASK_FLAGS_LOW      3
+#define TASK_FLAGS_LOWEST   4
+#define TASK_FLAGS_WAIT     0xFF
+
+// TASK FLAG
+#define TASK_FLAGS_ENDTASK  0x8000000000000000
+#define TASK_FLAGS_IDLE     0x0800000000000000
+
+// Macro Function
+#define GETPRIORITY(x)              ((x) & 0xFF)
+#define SETPRIORITY(x, priority)    ((x) = ((x) & 0xFFFFFFFFFFFFFF00) | (priority))
+#define GETTCBOFFSET(x)             ((x) & 0xFFFFFFFF)
+
+
 // Sturcture
 #pragma pack (push, 1)
 
@@ -63,6 +86,7 @@ typedef struct kTaskControlBlockStruct {
     void* pvStackAddress;
     QWORD qwStackSize;
 } TCB;
+
 // TCB Pool Status Manage DataStruct
 typedef struct kTCBPoolManagerStruct {
     // Task Pool Info.
@@ -73,14 +97,18 @@ typedef struct kTCBPoolManagerStruct {
     // TCB Allocated Numbers
     int iAllocatedCount;
 } TCBPOOLMANAGER;
+
 // Scheduler Status Manage DataStructure
 typedef struct kSchedulerStruct {
-    // Current Perform Task
-    TCB* pstRunningTask;
-    // Processor time that Current Perform Task can use
-    int iProcessorTime;
-    //  List of Task being prepared to run
-    LIST stReadyList;
+    TCB* pstRunningTask;    // Current Perform Task
+    int iProcessorTime;     // Processor time that Current Perform Task can use
+
+    LIST vstReadyList[TASK_MAXREADYLISTCOUNT];  // List of preparing tasks to be executed, sorted according to task priority
+    LIST stWaitList;                            // List of waiting tasks to be terminated
+
+    int viExecuteCount[TASK_MAXREADYLISTCOUNT]; // A data structure that stores the number of times a task has been executed for each priority.
+    QWORD qwProcessorLoad;                      // Data structure for calculating processor load
+    QWORD qwSpendProcessorTimeInIdleTask;       // Processor time used by idle tasks
 } SCHEDULER;
 
 #pragma pack(pop)
@@ -101,10 +129,25 @@ void kInitializeScheduler(void);
 void kSetRunningTask(TCB* pstTask);
 TCB* kGetRunningTask(void);
 TCB* kGetNextTaskToRun(void);
-void kAddTaskToReadyList(TCB* pstTask);
+BOOL kAddTaskToReadyList(TCB* pstTask);
+
 void kSchedule(void);
 BOOL kScheduleInInterrupt(void);
 void kDecreaseProcessorTime(void);
 BOOL kIsProcessorTimeExpired(void);
+
+TCB* kRemoveTaskFromReadyList(QWORD qwTaskID);
+BOOL kChangePriority(QWORD qwID, BYTE bPriority);
+BOOL kEndTask(QWORD qwTaskID);
+void kExitTask(void);
+int kGetReadyTaskCount(void);
+int kGetTaskCount(void);
+TCB* kGetTCBInTCBPool(int iOffset);
+BOOL kIsTaskExist(QWORD qwID);
+QWORD kGetProcessorLoad(void);
+
+// Idle task related
+void kIdleTask(void);
+void kHaltProcessorByLoad(void);
 
 #endif

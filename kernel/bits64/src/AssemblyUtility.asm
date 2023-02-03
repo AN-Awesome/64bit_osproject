@@ -6,7 +6,7 @@ SECTION .text
 global kInPortByte, kOutPortByte, kLoadGDTR, kLoadTR, kLoadIDTR
 global kEnableInterrupt, kDisableInterrupt, kReadRFLAGS
 global kReadTSC
-global kSwitchContext
+global kSwitchContext, kHlt, kTestAndSet
 global kHlt
 
 ; Read 1 byte to the port
@@ -189,4 +189,17 @@ kSwitchContext:
 kHlt:
     hlt
     hlt
+    ret
+
+kTestAndSet:
+    mov rax, rsi
+    lock cmpxchg byte [rdi], dl 
+    je .SUCCESS                 ; if the ZF bit is 1, it means equal, so move to .SUCCESS  
+
+.NOTSAME:                       ; Destination and Compare are different
+    mov rax, 0x00
+    ret
+
+.SUCCESS:                       ; Destination and Compare are the same
+    mov rax, 0x01
     ret

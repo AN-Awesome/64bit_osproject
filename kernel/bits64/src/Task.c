@@ -16,7 +16,7 @@ static void kInitializeTCBPool(void) {
     gs_stTCBPoolManager.pstStartAddress = (TCB*)TASK_TCBPOOLADDRESS;
     kMemSet(TASK_TCBPOOLADDRESS, 0, sizeof(TCB) * TASK_MAXCOUNT);
     // Allocate ID at TCB
-    for( i = 0; i < TASK_MAXCOUNT; i++) gs_stTCBPoolManager.pstStartAddress[i].stLink.qwID = i;
+    for(i = 0; i < TASK_MAXCOUNT; i++) gs_stTCBPoolManager.pstStartAddress[i].stLink.qwID = i;
     // Init TCB's Max Count & Allocate Count
     gs_stTCBPoolManager.iMaxCount = TASK_MAXCOUNT;
     gs_stTCBPoolManager.iAllocatedCount = 1;

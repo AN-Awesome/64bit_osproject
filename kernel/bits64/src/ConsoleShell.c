@@ -536,9 +536,7 @@ static void kTestMutex(const char* pcParameterBuffer) {
     kInitializeMutex(&gs_stMutex);
     for(i = 0; i < 3; i++) kCreateTask(TASK_FLAGS_LOW, (QWORD) kPrintNumberTask);
     kPrintf("Wait Util %d Task End...\n", i);
-    // kGetCh();
-
-    kExitTask();
+    kGetCh();
 }
 
 

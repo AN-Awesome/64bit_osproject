@@ -386,15 +386,13 @@ BOOL kConvertScanCodeAndPutQueue(BYTE bScanCode) {
     // Convert scan code to ASCII code & key state to insert key data
     if (kConvertScanCodeToASCIICode(bScanCode, &(stData.bASCIICode), &(stData.bFlags)) == TRUE) {
         // Cannot Interrupt
-        // bPreviousInterrupt = kSetInterruptFlag(FALSE);
-        bPreviousInterrupt = kLockForSystemData();      // EntryPoint
+        bPreviousInterrupt = kLockForSystemData();  // EntryPoint
 
         // Insert Key Queue
-        bResult = kPutQueue(&gs_stKeyQueue, &stData);
+        bResult = kPutQueue( &gs_stKeyQueue, &stData);
 
         // Restore previous interrupt flags
-        // kSetInterruptFlag(bPreviousInterrupt);
-        kUnlockForSystemData(bPreviousInterrupt);       // EndPoint
+        kUnlockForSystemData(bPreviousInterrupt);
     }
 
     return bResult;
@@ -405,17 +403,8 @@ BOOL kGetKeyFromKeyQueue(KEYDATA* pstData) {
     BOOL bResult;
     BOOL bPreviousInterrupt;
 
-    if(kIsQueueEmpty(&gs_stKeyQueue) == TRUE) return FALSE;
-
-    // Unable to Interrupt
-    // bPreviousInterrupt = kSetInterruptFlag(FALSE);
-    bPreviousInterrupt = kLockForSystemData();
-
-    // Insert Key Queue
+    bPreviousInterrupt = kLockForSystemData();  // EntryPoint
     bResult = kGetQueue(&gs_stKeyQueue, pstData);
-
-    // Restore previous interrupt flags
-    // kSetInterruptFlag(bPreviousInterrupt);
-    kUnlockForSystemData(bPreviousInterrupt);
+    kUnlockForSystemData(bPreviousInterrupt);   // EndPoint
     return bResult;
 }

@@ -16,7 +16,7 @@ static void kInitializeTCBPool(void) {
     gs_stTCBPoolManager.pstStartAddress = (TCB*)TASK_TCBPOOLADDRESS;
     kMemSet(TASK_TCBPOOLADDRESS, 0, sizeof(TCB) * TASK_MAXCOUNT);
     // Allocate ID at TCB
-    for(i = 0; i < TASK_MAXCOUNT; i++) gs_stTCBPoolManager.pstStartAddress[i].stLink.qwID = i;
+    for( i = 0; i < TASK_MAXCOUNT; i++) gs_stTCBPoolManager.pstStartAddress[i].stLink.qwID = i;
     // Init TCB's Max Count & Allocate Count
     gs_stTCBPoolManager.iMaxCount = TASK_MAXCOUNT;
     gs_stTCBPoolManager.iAllocatedCount = 1;
@@ -62,28 +62,34 @@ TCB* kCreateTask(QWORD qwFlags, QWORD qwEntryPointAddress) {
     void* pvStackAddress;
     BOOL bPreviousFlag;
 
+    // critical section start
     bPreviousFlag = kLockForSystemData();
-
     pstTask = kAllocateTCB();
     if(pstTask == NULL) {
+        // critical section end
         kUnlockForSystemData(bPreviousFlag);
         return NULL;
     }
+    // critical section end
     kUnlockForSystemData(bPreviousFlag);
-
 
     // Calculate Stack Address with Task ID, Lower 32 bit act as offset of Stack Pool
     pvStackAddress = (void*)(TASK_STACKPOOLADDRESS + (TASK_STACKSIZE * GETTCBOFFSET(pstTask->stLink.qwID)));
+    
     // Set up TCB and insert it into the list so it can be Scheduled
     kSetUpTask(pstTask, qwFlags, qwEntryPointAddress, pvStackAddress, TASK_STACKSIZE);
+    
+    // critical section start
+    bPreviousFlag = kLockForSystemData();
 
-    bPreviousFlag = kLockForSystemData();   // EntryPoint
-    kAddTaskToReadyList(pstTask);           // Add Task to Read List
-    kUnlockForSystemData(bPreviousFlag);    // EndPoint
+    // Insert task into ready list
+    kAddTaskToReadyList(pstTask);
+
+    // critical section end
+    kUnlockForSystemData(bPreviousFlag);
 
     return pstTask;
 }
-
 /*
 // Use Parameter to set TCB
 void kSetupTask(TCB* pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void* pvStackAddress, QWORD qwStackSize) {
@@ -120,18 +126,28 @@ void kInitializeScheduler(void) {
 void kSetRunningTask(TCB* pstTask) {
     BOOL bPreviousFlag;
 
-    bPreviousFlag = kLockForSystemData();       // EntryPoint
+    // critical section start
+    bPreviousFlag = kLockForSystemData();
+
     gs_stScheduler.pstRunningTask = pstTask;
-    kUnlockForSystemData(bPreviousFlag);        // EndPoint
+
+    // critical section end
+    kUnlockForSystemData(bPreviousFlag);
 }
 // Return Current Perform Task
 TCB* kGetRunningTask(void) {
-    BOOL bPreviouisFlag;
-    TCB *pstRunningTask;
+    BOOL bPreviousFlag;
+    TCB* pstRunningTask;
 
-    bPreviouisFlag = kLockForSystemData();              // EntryPoint
+    // critical section start
+    bPreviousFlag = kLockForSystemData();
+
     pstRunningTask = gs_stScheduler.pstRunningTask;
-    kUnlockForSystemData(bPreviouisFlag);               // Endoint
+
+    // critical section end
+    kUnlockForSystemData(bPreviousFlag);
+
+    return pstRunningTask;
 }
 
 // Get the next task to run in the task list
@@ -197,7 +213,8 @@ BOOL kChangePriority(QWORD qwTaskID, BYTE bPriority) {
 
     if(bPriority > TASK_MAXREADYLISTCOUNT) return FALSE;
 
-    bPreviousFlag = kLockForSystemData();   // EntryPoint
+    // critical section start
+    bPreviousFlag = kLockForSystemData();    
 
     // If the task is currently running, only change the priority
     // When an interrupt (IRQ 0) of the PIT controller occurs and task switching is performed, move to the list of changed priorities.
@@ -216,8 +233,9 @@ BOOL kChangePriority(QWORD qwTaskID, BYTE bPriority) {
                 kAddTaskToReadyList(pstTarget);
             }
         }
-    }
-    kUnlockForSystemData(bPreviousFlag);    // EndPoint
+    }    
+    // critical section end
+    kUnlockForSystemData(bPreviousFlag);
     return TRUE;
 }
 
@@ -228,14 +246,16 @@ void kSchedule(void) {
     BOOL bPreviousFlag;
     // Need Task to Switch to
     if(kGetReadyTaskCount() < 1) return;
-
-
     // Prevent Interrupt during switchover which is troublesome if the task switchover occurs again
-    bPreviousFlag = kLockForSystemData();   // EntryPoint
 
+    // critical section start
+    bPreviousFlag = kLockForSystemData();
+
+    // Get the next task to run
     pstNextTask = kGetNextTaskToRun();
     if(pstNextTask == NULL) {
-        kUnlockForSystemData(bPreviousFlag); // EndPoint
+        // critical section end
+        kUnlockForSystemData(bPreviousFlag);
         return;
     }
     pstRunningTask = gs_stScheduler.pstRunningTask;
@@ -245,7 +265,7 @@ void kSchedule(void) {
     if((pstRunningTask->qwFlags & TASK_FLAGS_IDLE) == TASK_FLAGS_IDLE) gs_stScheduler.qwSpendProcessorTimeInIdleTask += TASK_PROCESSORTIME - gs_stScheduler.iProcessorTime;
 
     // If the task end flag is set, the context does not need to be saved, so insert into the waiting list and switch the context
-    if(pstRunningTask->qwFlags & TASK_FLAGS_ENDTASK) {
+    if( pstRunningTask->qwFlags & TASK_FLAGS_ENDTASK ) {
         kAddListToTail(&(gs_stScheduler.stWaitList), pstRunningTask);
         kSwitchContext(NULL, &(pstNextTask->stContext));
     } else {
@@ -255,6 +275,9 @@ void kSchedule(void) {
 
     // Update Processor Using time
     gs_stScheduler.iProcessorTime = TASK_PROCESSORTIME;
+    kSetInterruptFlag(bPreviousFlag);
+
+    // critical section end
     kUnlockForSystemData(bPreviousFlag);
 }
 // Find another Task and Switch when Interrupt Occured
@@ -263,12 +286,14 @@ BOOL kScheduleInInterrupt(void) {
     char* pcContextAddress;
     BOOL bPreviousFlag;
 
-    bPreviousFlag = kLockForSystemData();       // EntryPoint
+    // critical section start
+    bPreviousFlag = kLockForSystemData();
 
     // Exit if there is no Task to Switch
     pstNextTask = kGetNextTaskToRun();
     if(pstNextTask == NULL) {
-        kUnlockForSystemData(bPreviousFlag);    // EndPoint
+        // critical section end
+        kUnlockForSystemData(bPreviousFlag);
         return FALSE;
     }
 
@@ -289,10 +314,10 @@ BOOL kScheduleInInterrupt(void) {
         kMemCpy(&(pstRunningTask->stContext), pcContextAddress, sizeof(CONTEXT));
         kAddTaskToReadyList(pstRunningTask);
     }
+    // critical section end
+    kUnlockForSystemData(bPreviousFlag);
 
-    kUnlockForSystemData(bPreviousFlag);    // EndPoint
-
-    // Set the task to be switched and executed as Running Task and copy the context to IST so that task switching occurs automatically
+    // 전환해서 실행할 태스크를 Running Task로 설정하고 콘텍스트를 IST에 복사해서 자동으로 태스크 전환이 일어나도록 함
     kMemCpy(pcContextAddress, &(pstNextTask->stContext), sizeof(CONTEXT));
 
     // Update Processor Using Time
@@ -340,7 +365,8 @@ BOOL kEndTask(QWORD qwTaskID) {
     BYTE bPriority;
     BOOL bPreviousFlag;
 
-    bPreviousFlag = kLockForSystemData();   // EntryPoint
+    // critical section start
+    bPreviousFlag = kLockForSystemData();
 
     // If the task is currently running, set the EndTask bit and switch the task.
     pstTarget = gs_stScheduler.pstRunningTask;
@@ -348,7 +374,8 @@ BOOL kEndTask(QWORD qwTaskID) {
         pstTarget->qwFlags |= TASK_FLAGS_ENDTASK;
         SETPRIORITY(pstTarget->qwFlags, TASK_FLAGS_WAIT);
 
-        kUnlockForSystemData(bPreviousFlag);    // EndPoint
+        // critical section end
+        kUnlockForSystemData(bPreviousFlag);
 
         kSchedule();
 
@@ -363,13 +390,16 @@ BOOL kEndTask(QWORD qwTaskID) {
                 pstTarget->qwFlags |= TASK_FLAGS_ENDTASK;
                 SETPRIORITY(pstTarget->qwFlags, TASK_FLAGS_WAIT);
             }
-            kUnlockForSystemData(bPreviousFlag);    // EndPoint
+            // critical section end
+            kUnlockForSystemData(bPreviousFlag);
             return TRUE;
         }
         pstTarget->qwFlags |= TASK_FLAGS_ENDTASK;
         SETPRIORITY(pstTarget->qwFlags, TASK_FLAGS_WAIT);
         kAddListToTail(&(gs_stScheduler.stWaitList), pstTarget);
     }
+    // critical section end
+    kUnlockForSystemData(bPreviousFlag);
     return TRUE;
 }
 
@@ -382,25 +412,34 @@ void kExitTask(void) {
 int kGetReadyTaskCount(void) {
     int iTotalCount = 0;
     int i;
+    BOOL bPreviousFlag;
+
+    // critical section start
+    bPreviousFlag = kLockForSystemData();
 
     // Check all ready queues to get the number of tasks
     for(i=0; i<TASK_MAXREADYLISTCOUNT; i++) iTotalCount += kGetListCount(&(gs_stScheduler.vstReadyList[i]));
+    
+    // critical section end
+    kUnlockForSystemData(bPreviousFlag);
     return iTotalCount;
 }
 
 // Returns the total number of tasks
 int kGetTaskCount(void) {
     int iTotalCount;
-    BOOL bPreviousCount;
+    BOOL bPreviousFlag;
 
     // After getting the number of tasks in the ready queue, add the number of tasks in the waiting queue and the number of currently running tasks.
     iTotalCount = kGetReadyTaskCount();
 
-    bPreviousCount = kLockForSystemData();  // EntryPoint
+    // critical section start
+    bPreviousFlag = kLockForSystemData();
 
     iTotalCount += kGetListCount(&(gs_stScheduler.stWaitList)) + 1;
 
-    kUnlockForSystemData(bPreviousCount);   // EndPoint
+    // critical section end
+    kUnlockForSystemData(bPreviousFlag);
     return iTotalCount;
 }
 
@@ -433,8 +472,8 @@ void kIdleTask(void) {
     TCB* pstTask;
     QWORD qwLastMeasureTickCount, qwLastSpendTickInIdleTask;
     QWORD qwCurrentMeasureTickCount, qwCurrentSpendTickInIdleTask;
-    QWORD qwTaskID;
     BOOL bPreviousFlag;
+    QWORD qwTaskID;
 
     // Stores baseline information for calculating processor usage
     qwLastSpendTickInIdleTask = gs_stScheduler.qwSpendProcessorTimeInIdleTask;
@@ -460,17 +499,20 @@ void kIdleTask(void) {
         // If there is a task waiting in the wait queue, terminate the task
         if(kGetListCount(&(gs_stScheduler.stWaitList)) >= 0) {
             while(1) {
-                bPreviousFlag = kLockForSystemData();   // EntryPoint
+                // critical section start
+                bPreviousFlag = kLockForSystemData();
                 pstTask = kRemoveListFromHeader(&(gs_stScheduler.stWaitList));
                 if(pstTask == NULL) {
-                    kUnlockForSystemData(bPreviousFlag);    // EndPoint
+                    // critical section end
+                    kUnlockForSystemData(bPreviousFlag);
                     break;
                 }
                 qwTaskID = pstTask->stLink.qwID;
                 kFreeTCB(qwTaskID);
+                // critical section end
+                kUnlockForSystemData(bPreviousFlag);
 
-                kUnlockForSystemData(bPreviousFlag);    // EndPoint
-                kPrintf( "IDLE: Task ID is completely ended. \n", pstTask->stLink.qwID);
+                kPrintf("IDLE: Task ID[0x%q] is completely ended. \n", qwTaskID);
             }
         }
         kSchedule();
@@ -486,5 +528,7 @@ void kHaltProcessorByLoad(void) {
     } else if(gs_stScheduler.qwProcessorLoad < 80) {
         kHlt();
         kHlt();
-    } else if(gs_stScheduler.qwProcessorLoad < 95) kHlt();
+    } else if(gs_stScheduler.qwProcessorLoad < 95) {
+        kHlt();
+    }
 }

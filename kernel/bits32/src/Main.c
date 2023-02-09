@@ -70,7 +70,7 @@ void Main(void){
 	while(1);
 }
 
-void kPrintString(int iX, int iY, const char* pcString, int color){
+void kPrintString(int iX, int iY, const char* pcString, int color) {
 	CHARACTER* pstScreen = (CHARACTER*) 0xB8000;
 	int i;
 
@@ -83,7 +83,7 @@ void kPrintString(int iX, int iY, const char* pcString, int color){
 }
 
 //Initialize Kernel64 Area to 0
-BOOL kInitializeKernel64Area(void){
+BOOL kInitializeKernel64Area(void) {
 	DWORD* pdwCurrentAddress;
 
 	// 1MB~6MB AREA
@@ -100,7 +100,7 @@ BOOL kInitializeKernel64Area(void){
 	return TRUE;
 }
 
-BOOL kIsMemoryEnough(void){
+BOOL kIsMemoryEnough(void) {
 	DWORD* pdwCurrentAddress;
 	//Start 1Mbyte
 	pdwCurrentAddress = (DWORD*) 0x100000;
@@ -119,7 +119,7 @@ BOOL kIsMemoryEnough(void){
 	return TRUE;
 }
 
-void kCopyKernel64ImageTo2MB(void){
+void kCopyKernel64ImageTo2MB(void) {
 	WORD wKernel32SectorCount, wTotalKernelSectorCount;
 	DWORD* pdwSourceAddress, *pdwDestinationAddress;
 	int i;

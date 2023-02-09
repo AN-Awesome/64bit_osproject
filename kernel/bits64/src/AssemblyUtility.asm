@@ -6,8 +6,9 @@ SECTION .text
 global kInPortByte, kOutPortByte, kLoadGDTR, kLoadTR, kLoadIDTR
 global kEnableInterrupt, kDisableInterrupt, kReadRFLAGS
 global kReadTSC
-global kSwitchContext, kHlt, kTestAndSet
-global kHlt
+global kSwitchContext   ; 20장
+global kHlt             ; 20장
+global kTestAndSet      ; 20장
 
 ; Read 1 byte to the port
 ; PARAM: WORD wPort
@@ -191,15 +192,19 @@ kHlt:
     hlt
     ret
 
-kTestAndSet:
+; 20chapter
+; Test and setup in one command
+kTestAndSet: 
     mov rax, rsi
-    lock cmpxchg byte [rdi], dl 
-    je .SUCCESS                 ; if the ZF bit is 1, it means equal, so move to .SUCCESS  
+    lock cmpxchg byte [rdi], dl
+    je .SUCCESS
 
-.NOTSAME:                       ; Destination and Compare are different
+; Destination and Compare are different
+.NOTSAME:   
     mov rax, 0x00
     ret
 
-.SUCCESS:                       ; Destination and Compare are the same
+; Destination and Compare are the same
+.SUCCESS:
     mov rax, 0x01
     ret

@@ -116,6 +116,7 @@ typedef struct kSchedulerStruct {
 //==========================
 // Task Pool & Task-related
 //==========================
+
 static void kInitializeTCBPool(void);
 static TCB* kAllocateTCB(void);
 static void kFreeTCB(QWORD qwID);

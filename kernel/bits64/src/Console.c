@@ -141,7 +141,9 @@ BYTE kGetCh(void) {
     // 키가 눌러질 때까지 대기
     while(1){
         // 키 큐에 데이터가 수신될 때까지 대기
-        while(kGetKeyFromKeyQueue(&stData) == FALSE) kSchedule();
+        while(kGetKeyFromKeyQueue(&stData) == FALSE){
+            kSchedule();
+        }
 
         // 키가 눌렸다는 데이터가 수신되면 ASCII 코드를 반환
         if(stData.bFlags & KEY_FLAGS_DOWN) return stData.bASCIICode;
@@ -154,7 +156,7 @@ void kPrintStringXY(int iX, int iY, const char* pcString, int color) {
     int i;
 
     // 비디오 메모리 어드레스에서 현재 출력할 위치를 계산
-    pstScreen += (iY * CONSOLE_WIDTH) + iX;
+    pstScreen += (iY * 80) + iX;
     
     // 문자열의 길이만큼 루프를 돌면서 문자와 속성을 저장
     for(i = 0; pcString[i] != 0; i++ ){

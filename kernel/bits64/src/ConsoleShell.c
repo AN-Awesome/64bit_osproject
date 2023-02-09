@@ -4,11 +4,11 @@
 #include "Utility.h"
 #include "PIT.h"
 #include "RTC.h"
-#include "Task.h"
 #include "AssemblyUtility.h"
+#include "Task.h"
+#include "Synchronization.h"
 #include "TextColor.h"
 #include "ConsoleEster.h"
-#include "Synchronization.h"
 
 // Command Table def.
 SHELLCOMMANDENTRY gs_vstCommandTable[] = {
@@ -361,14 +361,13 @@ static void kTestTask1(void) {
                 iY--;
                 if(iY < iMargin) i = 0;
                 break;
-
-            pstScreen[iY * CONSOLE_WIDTH + iX].bCharactor = bData;
-            pstScreen[iY * CONSOLE_WIDTH + iX].bAttribute = bData & 0x0F;
-            bData++;
-
-            // Switch Task
-            //kSchedule();
         }
+        pstScreen[iY * CONSOLE_WIDTH + iX].bCharactor = bData;
+        pstScreen[iY * CONSOLE_WIDTH + iX].bAttribute = bData & 0x0F;
+        bData++;
+
+        // Switch Task
+        //kSchedule();
     }
     kExitTask();
 }
@@ -407,12 +406,12 @@ static void kCreateTestTask(const char* pcParameterBuffer) {
     switch(kAToI(vcType, 10)) {
         case 1:
             for(i = 0; i < kAToI(vcCount, 10); i++) if(kCreateTask(TASK_FLAGS_LOW, (QWORD)kTestTask1) == NULL) break;
-            kPrintf(" Task1 %d Created\n", i);
+            kPrintf("Task1 %d Created\n", i);
             break;
 
         case 2:
             for(i = 0; i < kAToI(vcCount, 10); i++) if(kCreateTask(TASK_FLAGS_LOW, (QWORD)kTestTask2) == NULL) break;
-            kPrintf(" Task2 %d Created\n", i);
+            kPrintf("Task2 %d Created\n", i);
             break;
     }
 }
@@ -477,64 +476,57 @@ static void kKillTask(const char* pcParameterBuffer) {
     // Exit Task
     if(kMemCmp(vcID, "0x", 2) == 0) qwID = kAToI(vcID + 2, 16);
     else qwID = kAToI(vcID, 10);
+    // Certain ID Exit Case
     if(qwID != 0xFFFFFFFF) {
-        kPrintf("Kill Task ID [0x%q]", qwID);
+        kPrintf("Kill Task ID[0x%q]", qwID);
         if(kEndTask(qwID) == TRUE) kPrintf("Success\n");
         else kPrintf("Fail\n");
-    } else for(i = 2; i < TASK_MAXCOUNT; i++) { // Shut down All Task except console cell & Idle task
+    } else for(i = 2; i < TASK_MAXCOUNT; i++) {
         pstTCB = kGetTCBInTCBPool(i);
         qwID = pstTCB->stLink.qwID;
         if((qwID >> 32) != 0) {
-            kPrintf("Kill Task ID [0x%q ", qwID);
+            kPrintf("Kill Task ID [0x%q]", qwID);
             if(kEndTask(qwID) == TRUE) kPrintf("Success\n");
             else kPrintf("Fail\n");
-        }
-    }   
+        } 
+    }
 }
 // Process Usage Rate
 static void kCPULoad(const char* pcParameterBuffer) {
     kPrintf("Processor Load : %d%%\n", kGetProcessorLoad());
 }
-// Mutex Test Mutex & Variable
+
 static MUTEX gs_stMutex;
 static volatile QWORD gs_qwAdder;
 
-// Mutex Test Task
 static void kPrintNumberTask(void) {
     int i;
     int j;
     QWORD qwTickCount;
 
-    // Wait about 50 ms to avoid overlapping Message output from ConsoleShell
     qwTickCount = kGetTickCount();
     while((kGetTickCount() - qwTickCount) < 50) kSchedule();
 
-    // Output Num around the Loop
     for(i = 0; i < 5; i++) {
         kLock( &(gs_stMutex));
-        kPrintf("Task ID [0x%Q Value[%d]\n", kGetRunningTask()->stLink.qwID, gs_qwAdder);
+        kPrintf("Task ID [0x%Q] Value[%d]\n", kGetRunningTask()->stLink.qwID,gs_qwAdder);
 
         gs_qwAdder += 1;
-        kUnlock(&(gs_stMutex));
-        // Code added to increase processor consumption
+        kUnlock( &(gs_stMutex));
         for(j = 0; j < 30000; j++);
     }
-
-    // Wait about 1sec until All Task Shutdown
     qwTickCount = kGetTickCount();
-    while((kGetTickCount() - qwTickCount) < 1000) kSchedule();
-
-    // Exit Task
+    while(( kGetTickCount() - qwTickCount ) < 1000) kSchedule();
     kExitTask();
 }
-// Create Tasks for Test Mutex
+
 static void kTestMutex(const char* pcParameterBuffer) {
     int i;
     gs_qwAdder = 1;
 
-    // Init Mutex
     kInitializeMutex(&gs_stMutex);
-    for(i = 0; i < 3; i++) kCreateTask(TASK_FLAGS_LOW, (QWORD)kPrintNumberTask);
+
+    for(i = 0; i < 3; i++) kCreateTask(TASK_FLAGS_LOW, (QWORD) kPrintNumberTask);
     kPrintf("Wait Util %d Task End...\n", i);
     kGetCh();
 }

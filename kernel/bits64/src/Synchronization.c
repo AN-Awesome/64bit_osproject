@@ -22,11 +22,11 @@ void kInitializeMutex(MUTEX* pstMutex) {
 // Locking functions for data used between tasks
 void kLock(MUTEX* pstMutex) {
     // If it's already locked, check if I'm locked, increase the number of locks, and pay the total
-    if(kTestAndSet(&(pstMutex->bLockFlag), 0, 1) == FALSE ) {
+    if(kTestAndSet(&(pstMutex->bLockFlag), 0, 1) == FALSE) {
         // If you locked yourself, only increase the number of times
         if(pstMutex->qwTaskID == kGetRunningTask()->stLink.qwID) { 
             pstMutex->dwLockCount++;
-            return ;
+            return;
         }
 
         // If it is not you, wait until the locked thing is unlocked
@@ -35,7 +35,7 @@ void kLock(MUTEX* pstMutex) {
 
     // Setting locks, locked flags are handled by the kTestAndSet() function above.
     pstMutex->dwLockCount = 1;
-    pstMutex->qwTaskID = kGetRunningTask( )->stLink.qwID;
+    pstMutex->qwTaskID = kGetRunningTask()->stLink.qwID;
 }
 
 // Unlock function for data used between tasks
@@ -46,7 +46,7 @@ void kUnlock(MUTEX* pstMutex) {
     // If the mutex is locked redundantly, only the number of locks is reduced.
     if(pstMutex->dwLockCount > 1) {
         pstMutex->dwLockCount--;
-        return ;
+        return;
     }
 
     pstMutex->qwTaskID = TASK_INVALIDID;    // set as off

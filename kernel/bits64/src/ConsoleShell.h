@@ -58,4 +58,7 @@ static void kKillTask(const char* pcParameterBuffer);
 static void kCPULoad(const char* pcParameterBuffer);
 static void kTestMutex(const char* pcParameterBuffer);
 
+static void kCreateThreadTask(void);
+static void kTestThread(const char* pcParameterBuffer);
+
 #endif

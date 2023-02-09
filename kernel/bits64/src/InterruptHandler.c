@@ -68,7 +68,7 @@ void kTimerHandler(int iVectorNumber) {
     // Count
     vcBuffer[8] = '0' + g_iTimerInterruptCount;
     g_iTimerInterruptCount = (g_iTimerInterruptCount + 1) % 10;
-    kPrintStringXY(70, 2, vcBuffer, GREEN);
+    kPrintStringXY(70, 0, vcBuffer, GREEN);
 
     kSendEOIToPIC(iVectorNumber - PIC_IRQSTARTVECTOR);
 

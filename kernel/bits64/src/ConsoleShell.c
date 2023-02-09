@@ -530,13 +530,13 @@ static void kDropCharactorThread(void) {
         if((kRandom() % 20) < 15) {
             vcText[0] = ' ';
             for(i=0; i<CONSOLE_HEIGHT-1; i++) {
-                kPrintStringXY(iX, i, vcText);
+                kPrintStringXY(iX, i, vcText, GREEN);
                 kSleep(50);
             }
         } else {
             for(i=0; i<CONSOLE_HEIGHT -1; i++) {
                 vcText[0] = i + kRandom();
-                kPrintStringXY(iX, i, vcText);
+                kPrintStringXY(iX, i, vcText, GREEN);
                 kSleep(50);
             }
         }

@@ -31,6 +31,7 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"cpuload", "Show Processor Load", kCPULoad},
     {"testmutex", "Test Mutex Function", kTestMutex},
     {"testthread", "Test Thread And Process Function", kTestThread},
+    {"showmatrix", "Show Matrix Screen", kShowMatrix},
     {"testpie", "Test PIE Calculation", kTestPIE}
 };
 
@@ -533,7 +534,7 @@ static void kKillTask(const char* pcParameterBuffer) {
     else qwID = kAToI(vcID, 10);
     // Certain ID Exit Case
     if(qwID != 0xFFFFFFFF) {
-        pstTCB = kGetTCBInPool(GETTCBOFFSET(qwID));
+        pstTCB = kGetTCBInTCBPool(GETTCBOFFSET(qwID));
         qwID = pstTCB->stLink.qwID;
         
         if(((qwID >> 32) != 0) && ((pstTCB->qwFlags & TASK_FLAGS_SYSTEM) == 0x00)) {
@@ -558,6 +559,72 @@ static void kCPULoad(const char* pcParameterBuffer) {
 
 static MUTEX gs_stMutex;
 static volatile QWORD gs_qwAdder;
+
+// generate random numbers Variable
+static volatile QWORD gs_qwRandomValue = 0;
+
+// return random number
+QWORD kRandom(void) {
+    gs_qwRandomValue = (gs_qwRandomValue * 412153 + 5571031) >> 16;
+    return gs_qwRandomValue;
+}
+
+// The thread that makes the spelling come down
+static void kDropCharactorThread(void) {
+    int iX, iY;
+    int i;
+    char vcText[2] = {0, };
+
+    iX = kRandom() % CONSOLE_WIDTH;
+
+    while(1) {
+        kSleep(kRandom() % 20);
+
+        if((kRandom() % 20) < 15) {
+            vcText[0] = ' ';
+            for(i=0; i<CONSOLE_HEIGHT-1; i++) {
+                kPrintStringXY(iX, i, vcText, GREEN);
+                kSleep(50);
+            }
+        } else {
+            for(i=0; i<CONSOLE_HEIGHT -1; i++) {
+                vcText[0] = i + kRandom();
+                kPrintStringXY(iX, i, vcText, GREEN);
+                kSleep(50);
+            }
+        }
+    }
+}
+
+// process : creating threads matrix screen
+static void kMatrixProcess(void) {
+    int i;
+    
+    for(i=0; i<300; i++) {
+        if(kCreateTask(TASK_FLAGS_THREAD | TASK_FLAGS_LOW, 0, 0, (QWORD)kDropCharactorThread) == NULL) break;
+        kSleep(kRandom() % 5 + 5);
+    }
+    kPrintf("%d Thread is creatd\n", i);
+
+    // Key is enter -> End process 
+    kGetCh();
+}
+
+// Show Matrix on display
+static void kShowMatrix(const char* pcParameterBuffer) {
+    TCB* pstProcess;
+
+    pstProcess = kCreateTask(TASK_FLAGS_PROCESS | TASK_FLAGS_LOW, (void*)0xE00000, 0XE00000, (QWORD)kMatrixProcess);
+
+    if(pstProcess != NULL) {
+        kPrintf("Matrix Process [0x%Q] Create Success\n");
+
+        // Wait for task finish
+        while((pstProcess->stLink.qwID >> 32) != 0) kSleep(100);
+    } else {
+        kPrintf("Matrix Process Create Fail\n");
+    }
+}
 
 static void kPrintNumberTask(void) {
     int i;
@@ -595,7 +662,9 @@ static void kCreateThreadTask(void) {
     int i;
 
     for(i = 0; i < 3; i++) kCreateTask(TASK_FLAGS_LOW | TASK_FLAGS_THREAD, 0, 0, (QWORD) kTestTask2);
-    while(1) kSleep(1);
+    while(1) {
+        kSleep(1);
+    }
 }
 
 static void kTestThread(const char* pcParameterBuffer) {

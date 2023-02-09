@@ -11,12 +11,14 @@
 #define FALSE   0
 #define NULL    0
 
-#pragma pack( push, 1 )
+#define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
+
+#pragma pack(push, 1)
 
 typedef struct kCharactorStruct {
     BYTE bCharactor;
     BYTE bAttribute;
 } CHARACTER;
 
-#pragma pack( pop )
+#pragma pack(pop)
 #endif

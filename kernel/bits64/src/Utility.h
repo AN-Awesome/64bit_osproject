@@ -24,4 +24,6 @@ int kVSPrintf(char* pcBuffer, const char* pcFormatString, va_list ap);
 QWORD kGetTickCount(void);
 extern volatile QWORD g_qwTickCount;
 
+void kSleep(QWORD qwMillisecond); // 21 chapter
+
 #endif

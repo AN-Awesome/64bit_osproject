@@ -480,7 +480,7 @@ static void kKillTask(const char* pcParameterBuffer) {
     else qwID = kAToI(vcID, 10);
     // Certain ID Exit Case
     if(qwID != 0xFFFFFFFF) {
-        pstTCB = kGetTCBInPool(GETTCBOFFSET(qwID));
+        pstTCB = kGetTCBInTCBPool(GETTCBOFFSET(qwID));
         qwID = pstTCB->stLink.qwID;
         
         if(((qwID >> 32) != 0) && ((pstTCB->qwFlags & TASK_FLAGS_SYSTEM) == 0x00)) {
@@ -542,7 +542,9 @@ static void kCreateThreadTask(void) {
     int i;
 
     for(i = 0; i < 3; i++) kCreateTask(TASK_FLAGS_LOW | TASK_FLAGS_THREAD, 0, 0, (QWORD) kTestTask2);
-    while(1) kSleep(1);
+    while(1) {
+        kSleep(1);
+    }
 }
 
 static void kTestThread(const char* pcParameterBuffer) {

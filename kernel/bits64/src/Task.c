@@ -83,7 +83,7 @@ TCB* kCreateTask(QWORD qwFlags, void* pvMemoryAddress, QWORD qwMemorySize, QWORD
         pstTask->pvMemoryAddress = pstProcess->pvMemoryAddress;
         pstTask->qwMemorySize = pstProcess->qwMemorySize;
 
-        kAddListToTail(&(pstProcess->stchildThreadList), &(pstTask->stThreadLink));
+        kAddListToTail(&(pstProcess->stChildThreadList), &(pstTask->stThreadLink));
     } else {
         pstTask->qwParentProcessID = pstProcess->stLink.qwID;
         pstTask->pvMemoryAddress = pvMemoryAddress;
@@ -100,7 +100,7 @@ TCB* kCreateTask(QWORD qwFlags, void* pvMemoryAddress, QWORD qwMemorySize, QWORD
     // Set up TCB and insert it into the list so it can be Scheduled
     kSetUpTask(pstTask, qwFlags, qwEntryPointAddress, pvStackAddress, TASK_STACKSIZE);
 
-    kInitializeList(&(pstTask->stchildThreadList));
+    kInitializeList(&(pstTask->stChildThreadList));
     
     // critical section start
     bPreviousFlag = kLockForSystemData();

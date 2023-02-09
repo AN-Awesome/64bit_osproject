@@ -101,6 +101,8 @@ TCB* kCreateTask(QWORD qwFlags, void* pvMemoryAddress, QWORD qwMemorySize, QWORD
     kSetUpTask(pstTask, qwFlags, qwEntryPointAddress, pvStackAddress, TASK_STACKSIZE);
 
     kInitializeList(&(pstTask->stChildThreadList));
+
+    pstTask->bFPUUsed = FALSE;
     
     // critical section start
     bPreviousFlag = kLockForSystemData();
@@ -145,6 +147,8 @@ void kInitializeScheduler(void) {
     // Init Data Structure (Calculate processor utilization)
     gs_stScheduler.qwSpendProcessorTimeInIdleTask = 0;
     gs_stScheduler.qwProcessorLoad = 0;
+
+    gs_stScheduler.qwLastFPUUsedTaskID = TASK_INVALIDID;
 }
 // Set Current Perform Task
 void kSetRunningTask(TCB* pstTask) {
@@ -288,8 +292,11 @@ void kSchedule(void) {
     // Increase processor time used if diverted from idle task
     if((pstRunningTask->qwFlags & TASK_FLAGS_IDLE) == TASK_FLAGS_IDLE) gs_stScheduler.qwSpendProcessorTimeInIdleTask += TASK_PROCESSORTIME - gs_stScheduler.iProcessorTime;
 
+    if(gs_stScheduler.qwLastFPUUsedTaskID != pstNextTask->stLink.qwID) kSetTS();
+    else kClearTS();
+
     // If the task end flag is set, the context does not need to be saved, so insert into the waiting list and switch the context
-    if( pstRunningTask->qwFlags & TASK_FLAGS_ENDTASK ) {
+    if(pstRunningTask->qwFlags & TASK_FLAGS_ENDTASK) {
         kAddListToTail(&(gs_stScheduler.stWaitList), pstRunningTask);
         kSwitchContext(NULL, &(pstNextTask->stContext));
     } else {
@@ -304,6 +311,7 @@ void kSchedule(void) {
     // critical section end
     kUnlockForSystemData(bPreviousFlag);
 }
+
 // Find another Task and Switch when Interrupt Occured
 BOOL kScheduleInInterrupt(void) {
     TCB* pstRunningTask, *pstNextTask;
@@ -340,6 +348,9 @@ BOOL kScheduleInInterrupt(void) {
     }
     // critical section end
     kUnlockForSystemData(bPreviousFlag);
+
+    if(gs_stScheduler.qwLastFPUUsedTaskID != pstNextTask->stLink.qwID) kSetTS();
+    else kClearTS();
 
     // 전환해서 실행할 태스크를 Running Task로 설정하고 콘텍스트를 IST에 복사해서 자동으로 태스크 전환이 일어나도록 함
     kMemCpy(pcContextAddress, &(pstNextTask->stContext), sizeof(CONTEXT));
@@ -598,4 +609,12 @@ void kHaltProcessorByLoad(void) {
     } else if(gs_stScheduler.qwProcessorLoad < 95) {
         kHlt();
     }
+}
+
+QWORD kGetLastFPUUsedTaskID(void) {
+    return gs_stScheduler.qwLastFPUUsedTaskID;
+}
+
+void kSetLastFPUUsedTaskID(QWORD qwTaskID) {
+    gs_stScheduler.qwLastFPUUsedTaskID = qwTaskID;
 }

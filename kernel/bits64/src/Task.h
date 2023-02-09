@@ -93,11 +93,17 @@ typedef struct kTaskControlBlockStruct {
     LIST stChildThreadList;
     QWORD qwParentProcessID;
 
+    QWORD vqwFPUContext[512/8];
+    LIST stChildThreadList;
+
     CONTEXT stContext;
 
     // Stack
     void *pvStackAddress;
     QWORD qwStackSize;
+
+    BOOL bFPUUsed;
+    char vcPadding[11];
 } TCB;
 
 // TCB Pool Status Manage DataStruct
@@ -122,6 +128,8 @@ typedef struct kSchedulerStruct {
     int viExecuteCount[TASK_MAXREADYLISTCOUNT]; // A data structure that stores the number of times a task has been executed for each priority.
     QWORD qwProcessorLoad;                      // Data structure for calculating processor load
     QWORD qwSpendProcessorTimeInIdleTask;       // Processor time used by idle tasks
+
+    QWORD qwLastFPUUsedTaskID;
 } SCHEDULER;
 
 #pragma pack(pop)
@@ -164,5 +172,10 @@ static TCB* kGetProcessByThread(TCB *pstThread);
 // Idle task related
 void kIdleTask(void);
 void kHaltProcessorByLoad(void);
+
+
+// FPU
+QWORD kGetLastFPUUsedTaskID(void);
+void kSetLastFPUUsedTaskID(QWORD qwTaskID);
 
 #endif

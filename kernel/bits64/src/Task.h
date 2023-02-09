@@ -60,6 +60,9 @@
 
 // TASK FLAG
 #define TASK_FLAGS_ENDTASK  0x8000000000000000
+#define TASK_FLAGS_SYSTEM   0X4000000000000000
+#define TASK_FLAGS_PROCESS  0x2000000000000000
+#define TASK_FLAGS_THREAD   0x1000000000000000
 #define TASK_FLAGS_IDLE     0x0800000000000000
 
 // Macro Function
@@ -67,6 +70,7 @@
 #define SETPRIORITY(x, priority)    ((x) = ((x) & 0xFFFFFFFFFFFFFF00) | (priority))
 #define GETTCBOFFSET(x)             ((x) & 0xFFFFFFFF)
 
+#define GETTCBFROMTHREADLINK(x)     (TCB*)((QWORD)(x) - offsetof(TCB, stThreadLink))
 
 // Sturcture
 #pragma pack (push, 1)
@@ -80,10 +84,19 @@ typedef struct kContextStruct {
 typedef struct kTaskControlBlockStruct {
     LISTLINK stLink;    // Next Data Location & ID
     QWORD qwFlags;      // Flag
-    CONTEXT stContext; // Context
+    
+    void* pvMemoryAddress;
+    QWORD qwMemorySize;
 
-    // Stack Address & Size
-    void* pvStackAddress;
+    // ----
+    LISTLINK stThreadLink;
+    LIST stChildThreadList;
+    QWORD qwParentProcessID;
+
+    CONTEXT stContext;
+
+    // Stack
+    void *pvStackAddress;
     QWORD qwStackSize;
 } TCB;
 
@@ -120,7 +133,7 @@ typedef struct kSchedulerStruct {
 static void kInitializeTCBPool(void);
 static TCB* kAllocateTCB(void);
 static void kFreeTCB(QWORD qwID);
-TCB* kCreateTask(QWORD qwFlags, QWORD qwEntryPointAddress);
+TCB* kCreateTask(QWORD qwFlags, void *pvMemoryAddress, QWORD qwMemorySize, QWORD qwEntryPointAddress);
 static void kSetUpTask(TCB* pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress, void* pvStackAddress, QWORD qwStackSize);
 
 //===================
@@ -146,6 +159,7 @@ int kGetTaskCount(void);
 TCB* kGetTCBInTCBPool(int iOffset);
 BOOL kIsTaskExist(QWORD qwID);
 QWORD kGetProcessorLoad(void);
+static TCB* kGetProcessByThread(TCB *pstThread);
 
 // Idle task related
 void kIdleTask(void);

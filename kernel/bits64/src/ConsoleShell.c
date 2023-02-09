@@ -32,6 +32,7 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"testmutex", "Test Mutex Function", kTestMutex},
     {"testthread", "Test Thread And Process Function", kTestThread},
     {"showmatrix", "Show Matrix Screen", kShowMatrix},
+    {"testpie", "Test PIE Calculation", kTestPIE}
 };
 
 //==============
@@ -142,7 +143,59 @@ int kGetNextParameter(PARAMETERLIST* pstList, char* pcParameter) {
     pstList->iCurrentPosition += iLength + 1;
     return iLength;
 }
+// FPU Test Task
+static void kFPUTestTask(void) {
+    double dValue1;
+    double dValue2;
+    TCB* pstRunningTask;
+    QWORD qwCount = 0;
+    QWORD qwRandomValue;
+    int i;
+    int iOffset;
+    char vcData[4] = {'-', '\\', '|', '/'};
+    CHARACTER* pstScreen = (CHARACTER*) CONSOLE_VIDEOMEMORYADDRESS;
 
+    pstRunningTask = kGetRunningTask();
+    // Get Own ID & Use as Screen Offset
+    iOffset = (pstRunningTask->stLink.qwID & 0xFFFFFFFF) * 2;
+    iOffset = CONSOLE_WIDTH * CONSOLE_HEIGHT - (iOffset % (CONSOLE_WIDTH * CONSOLE_HEIGHT));
+    // Loop
+    while(1) {
+        dValue1 = 1;
+        dValue2 = 1;
+
+        for(i = 0; i < 10; i++) {
+            qwRandomValue = kRandom();
+            dValue1 *= (double)qwRandomValue;
+            dValue2 *= (double)qwRandomValue;
+            kSleep(1);
+            
+            qwRandomValue = kRandom();
+            dValue1 /= (double)qwRandomValue;
+            dValue2 /= (double)qwRandomValue;
+        }
+        if(dValue1 != dValue2) {
+            kPrintf("Value Is Not Same [%f] != [%f]\n", dValue1, dValue2);
+            break;
+        }
+        qwCount++;
+
+        pstScreen[iOffset].bCharactor = vcData[qwCount % 4];
+        pstScreen[iOffset].bAttribute = (iOffset % 15) + 1;
+    }
+}
+// PIE Calc
+static void kTestPIE(const char* pcParameterBuffer) {
+    double dResult;
+    int i;
+
+    kPrintf("PIE Calculation Test\n");
+    kPrintf("Result: 355/113 = ");
+    dResult = (double) 355 / 113;
+    kPrintf("%d.%d%d\n", (QWORD)dResult, ((QWORD)(dResult * 10) % 10), ((QWORD)(dResult * 100) % 10));
+
+    for(i = 0; i < 100; i++) kCreateTask(TASK_FLAGS_LOW | TASK_FLAGS_THREAD, 0, 0, (QWORD)kFPUTestTask);
+}
 //======================
 // Process Command Code
 //======================

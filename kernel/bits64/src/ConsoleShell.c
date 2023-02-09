@@ -194,7 +194,7 @@ static void kTestPIE(const char* pcParameterBuffer) {
     dResult = (double) 355 / 113;
     kPrintf("%d.%d%d\n", (QWORD)dResult, ((QWORD)(dResult * 10) % 10), ((QWORD)(dResult * 100) % 10));
 
-    for(i = 0; i < 100; i++) kCreateTask(TASK_FLAGS_LOW | TASK_FLAGS_THREAD 0, 0, (QWORD)kFPUTestTask);
+    for(i = 0; i < 100; i++) kCreateTask(TASK_FLAGS_LOW | TASK_FLAGS_THREAD, 0, 0, (QWORD)kFPUTestTask);
 }
 //======================
 // Process Command Code

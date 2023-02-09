@@ -4,6 +4,7 @@
 #include "Keyboard.h"
 #include "Task.h"
 #include "Descriptor.h"
+#include "AssemblyUtility.h" // 22 chapter
 #include "TextColor.h"
 #include "Console.h"
 
@@ -80,4 +81,50 @@ void kTimerHandler(int iVectorNumber) {
 
     // Switch Task(Next Period Time__TASK)
     if(kIsProcessorTimeExpired() == TRUE) kScheduleInInterrupt();
+}
+
+// Device Not Available Handler (22 chapter)
+void kDeviceNotAvilableHandler(int iVectorNumber) {
+    TCB* pstFPUTask, *pstCurrentTask;
+    QWORD qwLastFPUTaskID;
+
+    //================================================================================
+    // Print message : FPU exception occurred
+    char vcBuffer[] = "[EXC:  ,]";
+    static int g_iFPUInterruptCount = 0;
+
+    // Print message : exception vector(top right of screen as a two-digit integer)
+    vcBuffer[5] = '0' + iVectorNumber / 10;
+    vcBuffer[6] = '0' + iVectorNumber % 10;
+    // Print : number of occurrences
+    vcBuffer[8] = '0' + g_iFPUInterruptCount;
+    g_iFPUInterruptCount = (g_iFPUInterruptCount + 1) % 10;
+    kPrintStringXY(0, 0, vcBuffer);
+    //================================================================================
+
+    // SET : TS bit = 0 (CR0 control register)
+    kClearTS();
+
+    // SAVE : State of FPU to task
+    qwLastFPUTaskID = kGetLastFPUUsedTaskID();
+    pstCurrentTask = kGetRunningTask();
+
+    // Do NotThing : If used the FPU before
+    if(qwLastFPUTaskID == pstCurrentTask->stLink.qwID) return;
+
+    // SAVE : FPU status (if task using FPU)
+    else if(qwLastFPUTaskID != TASK_INVALIDID) {
+        pstFPUTask = kGetTCBInTCBPool(GETTCBOFFSET(qwLastFPUTaskID));
+        if((pstFPUTask != NULL) && (pstFPUTask->stLink.qwID == qwLastFPUTaskID)) kSaveFPUContext(pstFPUTask->vqwFPUContext);
+    }
+
+    // INIT FPU : if task not used FPU
+    // Restore FPU : if task used FPU
+    if(pstCurrentTask->bFPUUsed == FALSE) {
+        kInitializeFPU();
+        pstCurrentTask->bFPUUsed = TRUE;
+    } else kLoadFPUContext(pstCurrentTask->vqwFPUContext);
+
+    // Change : FPU ID  to current task
+    kSetLastFPUUsedTaskID(pstCurrentTask->stLink.qwID);
 }

@@ -9,7 +9,7 @@ global kReadTSC
 global kSwitchContext   ; 20장
 global kHlt             ; 20장
 global kTestAndSet      ; 20장
-global kInitializeFPU, kSaveFPUContext, kLoadFPUContext, kSetTs, kClearTS ; 22 chapter
+global kInitializeFPU, kSaveFPUContext, kLoadFPUContext, kSetTS, kClearTS ; 22 chapter
 
 ; Read 1 byte to the port
 ; PARAM: WORD wPort
@@ -229,7 +229,7 @@ kLoadFPUContext:
     ret
 
 ; Set Ts bit to '1' (CR0 Control Register)
-kSetTs:
+kSetTS:
     push rax
     
     mov rax, CR0

@@ -90,7 +90,6 @@ typedef struct kTaskControlBlockStruct {
 
     // ----
     LISTLINK stThreadLink;
-    LIST stChildThreadList;
     QWORD qwParentProcessID;
 
     QWORD vqwFPUContext[512/8];

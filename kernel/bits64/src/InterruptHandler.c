@@ -84,7 +84,7 @@ void kTimerHandler(int iVectorNumber) {
 }
 
 // Device Not Available Handler (22 chapter)
-void kDeviceNotAvilableHandler(int iVectorNumber) {
+void kDeviceNotAvailableHandler(int iVectorNumber) {
     TCB* pstFPUTask, *pstCurrentTask;
     QWORD qwLastFPUTaskID;
 
@@ -99,11 +99,12 @@ void kDeviceNotAvilableHandler(int iVectorNumber) {
     // Print : number of occurrences
     vcBuffer[8] = '0' + g_iFPUInterruptCount;
     g_iFPUInterruptCount = (g_iFPUInterruptCount + 1) % 10;
-    kPrintStringXY(0, 0, vcBuffer);
+    kPrintStringXY(0, 0, vcBuffer, BLUE_BR);
     //================================================================================
 
     // SET : TS bit = 0 (CR0 control register)
     kClearTS();
+    return;
 
     // SAVE : State of FPU to task
     qwLastFPUTaskID = kGetLastFPUUsedTaskID();

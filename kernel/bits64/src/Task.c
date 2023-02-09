@@ -1,5 +1,6 @@
 #include "Task.h"
 #include "Descriptor.h"
+#include "AssemblyUtility.h"
 
 static SCHEDULER gs_stScheduler;
 static TCBPOOLMANAGER gs_stTCBPoolManager;

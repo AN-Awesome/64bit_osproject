@@ -35,6 +35,16 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"testpie", "Test PIE Calculation", kTestPIE}
 };
 
+
+// generate random numbers Variable
+static volatile QWORD gs_qwRandomValue = 0;
+// return random number
+QWORD kRandom(void) {
+    gs_qwRandomValue = (gs_qwRandomValue * 412153 + 5571031) >> 16;
+    return gs_qwRandomValue;
+}
+
+
 //==============
 // Compose Shell
 //==============
@@ -559,15 +569,6 @@ static void kCPULoad(const char* pcParameterBuffer) {
 
 static MUTEX gs_stMutex;
 static volatile QWORD gs_qwAdder;
-
-// generate random numbers Variable
-static volatile QWORD gs_qwRandomValue = 0;
-
-// return random number
-QWORD kRandom(void) {
-    gs_qwRandomValue = (gs_qwRandomValue * 412153 + 5571031) >> 16;
-    return gs_qwRandomValue;
-}
 
 // The thread that makes the spelling come down
 static void kDropCharactorThread(void) {

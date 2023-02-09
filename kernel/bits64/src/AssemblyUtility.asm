@@ -9,6 +9,7 @@ global kReadTSC
 global kSwitchContext   ; 20장
 global kHlt             ; 20장
 global kTestAndSet      ; 20장
+global kInitializeFPU, kSaveFPUContext, kLoadFPUContext, kSetTs, kClearTS ; 22 chapter
 
 ; Read 1 byte to the port
 ; PARAM: WORD wPort
@@ -207,4 +208,38 @@ kTestAndSet:
 ; Destination and Compare are the same
 .SUCCESS:
     mov rax, 0x01
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; FPU Assembly Function
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Init FPU
+kInitializeFPU:
+    finit       ; Init FPU
+    ret
+
+; SAVE : Registers related to FPU 
+kSaveFPUContext:
+    fxsave [rdi]    ; Save FPU Register 
+    ret
+
+; Restore : Register related to FPU
+kLoadFPUContext:
+    fxrstor [rdi]
+    ret
+
+; Set Ts bit to '1' (CR0 Control Register)
+kSetTs:
+    push rax
+    
+    mov rax, CR0
+    or rax, 0x08
+    mov cr0, rax
+
+    pop rax
+    ret
+
+; Set TS bit to '0' (CR0 Control Register)
+kClearTS:
+    clts
     ret

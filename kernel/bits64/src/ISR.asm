@@ -3,7 +3,7 @@ SECTION .text
 
 ; INPUT FUNCTION
 extern kCommonExceptionHandler, kCommonInterruptHandler, kKeyboardHandler
-extern kTimerHandler
+extern kTimerHandler, kDeviceNotAvailableHandler
 
 ; OUTPUT FUNCTION
 ; Process Exception
@@ -202,7 +202,7 @@ kISRDeviceNotAvailable:         ; EX. NO: 7 - DEVIDE NOT AVAILABLE ISR
     KSAVECONTEXT
 
     mov rdi, 7                      ; SET EXCEPTION NUMBER
-    call kCommonExceptionHandler    ; CALL HANDLER
+    call kDeviceNotAvailableHandler  
 
     KLOADCONTEXT
     iretq

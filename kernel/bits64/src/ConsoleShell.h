@@ -60,5 +60,6 @@ static void kTestMutex(const char* pcParameterBuffer);
 
 static void kCreateThreadTask(void);
 static void kTestThread(const char* pcParameterBuffer);
+static void kTestPIE(cosnt char* pcParameterBuffer);
 
 #endif

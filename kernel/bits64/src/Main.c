@@ -6,6 +6,7 @@
 #include "PIT.h"
 #include "ConsoleShell.h"
 #include "Console.h"
+#include "DynamicMemory.h"
 #include "Task.h"
 
 void kPrintString(int iX, int iY, const char* pcString, int color);
@@ -29,6 +30,9 @@ void Main(void) {
     kPrintf("RAM Size = %d MB\n", kGetTotalRAMSize());
 
     kInitializeScheduler();
+
+    kInitializeDynamicMemory();
+
     kInitializePIT(MSTOCOUNT(1), 1);
 
     if(kInitializeKeyboard() == TRUE) kChangeKeyboardLED(FALSE, FALSE, FALSE);

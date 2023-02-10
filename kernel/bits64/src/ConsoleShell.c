@@ -643,7 +643,7 @@ static void kShowDynamicMemoryInformation(const char* pcParameterBuffer) {
     kPrintf("============ Dynamic Memory Information ============\n");
     kPrintf("Start Address: [0x%q]\n", qwStartAddress);
     kPrintf("Total Size: [0x%Q]byte, [%d]MB\n", qwTotalSize, qwTotalSize / 1024 / 1024);
-    kPrintf("Meta Size: [0x%Q]byte, [%dKB\n", qwMetaSize, qwMetaSize /1024);
+    kPrintf("Meta Size: [0x%Q]byte, [%d]KB\n", qwMetaSize, qwMetaSize /1024);
     kPrintf("Used Size: [0x%Q]byte, [%d]KB\n", qwUsedSize, qwUsedSize / 1024);
 }
 
@@ -666,11 +666,9 @@ static void kTestSequentialAllocation(const char* pcParameterBuffer) {
                 return;
             }
             for(k = 0; k < (DYNAMICMEMORY_MIN_SIZE << i) / 8; k++) pqwBuffer[k] = k;
-            for(k = 0; k < (DYNAMICMEMORY_MIN_SIZE << i) / 8; k++) {
-                if(pqwBuffer[k] != k) {
+            for(k = 0; k < (DYNAMICMEMORY_MIN_SIZE << i) / 8; k++) if(pqwBuffer[k] != k) {
                     kPrintf("\nCompare Fail\n");
                     return;
-                }
             }
             kPrintf(".");
         }
@@ -705,7 +703,7 @@ static void kRandomAllocationTask(void) {
             if(pbAllocationBuffer == 0) kSleep(1);
         } while(pbAllocationBuffer == 0);
         
-        kSPrintf(vcBuffer, "|Address: [0x%Q] Size:  [0x%Q] Allocation Success", pbAllocationBuffer, qwMemorySize);
+        kSPrintf(vcBuffer, "|Address: [0x%Q] Size: [0x%Q] Allocation Success", pbAllocationBuffer, qwMemorySize);
         kPrintStringXY(20, iY, vcBuffer);
         kSleep(200);
 
@@ -713,7 +711,7 @@ static void kRandomAllocationTask(void) {
         kPrintStringXY(20, iY, vcBuffer);
         for(i = 0; i < qwMemorySize / 2; i++) {
             pbAllocationBuffer[i] = kRandom() & 0xFF;
-            pbAllocationBuffer[i + (qwMemorySize /2)] = pbAllocationBuffer[i];
+            pbAllocationBuffer[i + (qwMemorySize / 2)] = pbAllocationBuffer[i];
         }
         kSleep(200);
 

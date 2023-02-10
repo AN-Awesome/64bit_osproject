@@ -90,7 +90,7 @@ void kDeviceNotAvailableHandler(int iVectorNumber) {
 
     //================================================================================
     // Print message : FPU exception occurred
-    char vcBuffer[] = "[EXC:  ,]";
+    char vcBuffer[] = "[EXC:  , ]";
     static int g_iFPUInterruptCount = 0;
 
     // Print message : exception vector(top right of screen as a two-digit integer)
@@ -99,12 +99,11 @@ void kDeviceNotAvailableHandler(int iVectorNumber) {
     // Print : number of occurrences
     vcBuffer[8] = '0' + g_iFPUInterruptCount;
     g_iFPUInterruptCount = (g_iFPUInterruptCount + 1) % 10;
-    kPrintStringXY(0, 0, vcBuffer, BLUE_BR);
+    kPrintStringXY(70, 2, vcBuffer, BLUE_BR);
     //================================================================================
 
     // SET : TS bit = 0 (CR0 control register)
     kClearTS();
-    return;
 
     // SAVE : State of FPU to task
     qwLastFPUTaskID = kGetLastFPUUsedTaskID();

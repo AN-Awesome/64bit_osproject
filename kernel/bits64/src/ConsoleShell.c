@@ -37,6 +37,7 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"dynamicmeminfo", "Show Dyanmic Memory Information", kShowDynamicMemoryInformation},
     {"testseqalloc", "Test Sequential Allocation & Free", kTestSequentialAllocation},
     {"testranalloc", "Test Random Allocation & Free", kTestRandomAllocation},
+    
 };
 
 //==============

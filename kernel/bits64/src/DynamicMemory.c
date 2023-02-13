@@ -79,22 +79,22 @@ static QWORD kCalculateDynamicMemorySize(void) {
 // Calculate Area Size : Information needed to manage dynamic memory areas
 // Return : Sort by smallest block
 static int kCalculateMetaBlockCount(QWORD qwDynamicRAMSize) {
-    long iBlockCountOfSmallestBlock; // ================= 책에는 l로 헤더에는 i로 나와있음
+    long lBlockCountOfSmallestBlock; // ================= 책에는 l로 헤더에는 i로 나와있음
     DWORD dwSizeOfAllocatedBlockListIndex;
     DWORD dwSizeOfBitmap;
     long i;
 
     // Calculate : Area to store allocated size
     // Calculate : Bitmap Area
-    iBlockCountOfSmallestBlock = qwDynamicRAMSize / DYNAMICMEMORY_MIN_SIZE;
+    lBlockCountOfSmallestBlock = qwDynamicRAMSize / DYNAMICMEMORY_MIN_SIZE;
     // Calculate : Area required to store the index
-    dwSizeOfAllocatedBlockListIndex = iBlockCountOfSmallestBlock * sizeof(BYTE);
+    dwSizeOfAllocatedBlockListIndex = lBlockCountOfSmallestBlock * sizeof(BYTE);
 
     // Calculate : Space required to store bitmap
     dwSizeOfBitmap = 0;
-    for(i=0; (iBlockCountOfSmallestBlock >> i)>0; i++) {
+    for(i=0; (lBlockCountOfSmallestBlock >> i) > 0; i++) {
         dwSizeOfBitmap += sizeof(BITMAP);                               // Space for a bitmap pointer in the block list
-        dwSizeOfBitmap += ((iBlockCountOfSmallestBlock >> i) + 7) / 8;  // Bitmap size of block list, rounded up in bytes
+        dwSizeOfBitmap += ((lBlockCountOfSmallestBlock >> i) + 7) / 8;  // Bitmap size of block list, rounded up in bytes
     }
     return (dwSizeOfAllocatedBlockListIndex + dwSizeOfBitmap + DYNAMICMEMORY_MIN_SIZE - 1) / DYNAMICMEMORY_MIN_SIZE;
 }

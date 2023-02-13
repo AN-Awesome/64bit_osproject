@@ -261,7 +261,7 @@ BOOL kFreeMemory(void* pvAddress) {
     // Unblock by finding the block offset in the block list
     iBitmapOffset = qwRelativeAddress / qwBlockSize;
     if(kFreeBuddyBlock(iBlockListIndex, iBitmapOffset) == TRUE) {
-        gs_stDynamicMemory.qwUsedSize =+ qwBlockSize;
+        gs_stDynamicMemory.qwUsedSize -= qwBlockSize;
         return TRUE;
     }
     return FALSE;

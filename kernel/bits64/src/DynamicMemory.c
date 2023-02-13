@@ -19,12 +19,12 @@ void kInitializeDynamicMemory(void) {
     gs_stDynamicMemory.iBlockCountOfSmallestBlock = (qwDynamicMemorySize / DYNAMICMEMORY_MIN_SIZE) - iMetaBlockCount;
 
     // Calculate : Composed of up to several block lists
-    for(i=0; (gs_stDynamicMemory.iBlockCountOfSmallestBlock >> i)>0; i++); // DO NOTHING
+    for(i = 0; (gs_stDynamicMemory.iBlockCountOfSmallestBlock >> i) > 0; i++); // DO NOTHING
     gs_stDynamicMemory.iMaxLevelCount = i;
 
     // Init : Area to store the index of the block list
     gs_stDynamicMemory.pbAllocateBlockListIndex = (BYTE*)DYNAMICMEMORY_START_ADDRESS;
-    for(i=0; i<gs_stDynamicMemory.iBlockCountOfSmallestBlock; i++) gs_stDynamicMemory.pbAllocateBlockListIndex[i] = 0xFF;
+    for(i = 0; i < gs_stDynamicMemory.iBlockCountOfSmallestBlock; i++) gs_stDynamicMemory.pbAllocateBlockListIndex[i] = 0xFF;
 
     // Specify start address : Bitmap Data Structure
     gs_stDynamicMemory.pstBitmapOfLevel = (BITMAP*)(DYNAMICMEMORY_START_ADDRESS + (sizeof(BYTE) * gs_stDynamicMemory.iBlockCountOfSmallestBlock));
@@ -34,13 +34,13 @@ void kInitializeDynamicMemory(void) {
 
     // Creating a bitmap by looping through each block list
     // set to empty
-    for(j=0; j<gs_stDynamicMemory.iMaxLevelCount; j++) {
+    for(j = 0; j < gs_stDynamicMemory.iMaxLevelCount; j++) {
         gs_stDynamicMemory.pstBitmapOfLevel[j].pbBitmap = pbCurrentBitmapPosition;
         gs_stDynamicMemory.pstBitmapOfLevel[j].qwExistBitCount = 0;
         iBlockCountOfLevel = gs_stDynamicMemory.iBlockCountOfSmallestBlock >> j;
 
         // set all to empty
-        for(i=0; i<iBlockCountOfLevel/8; i++) {
+        for(i = 0; i < iBlockCountOfLevel / 8; i++) {
             *pbCurrentBitmapPosition = 0x00;
             pbCurrentBitmapPosition++;
         }
@@ -79,22 +79,22 @@ static QWORD kCalculateDynamicMemorySize(void) {
 // Calculate Area Size : Information needed to manage dynamic memory areas
 // Return : Sort by smallest block
 static int kCalculateMetaBlockCount(QWORD qwDynamicRAMSize) {
-    long iBlockCountOfSmallestBlock; // ================= 책에는 l로 헤더에는 i로 나와있음
+    long lBlockCountOfSmallestBlock; // ================= 책에는 l로 헤더에는 i로 나와있음
     DWORD dwSizeOfAllocatedBlockListIndex;
     DWORD dwSizeOfBitmap;
     long i;
 
     // Calculate : Area to store allocated size
     // Calculate : Bitmap Area
-    iBlockCountOfSmallestBlock = qwDynamicRAMSize / DYNAMICMEMORY_MIN_SIZE;
+    lBlockCountOfSmallestBlock = qwDynamicRAMSize / DYNAMICMEMORY_MIN_SIZE;
     // Calculate : Area required to store the index
-    dwSizeOfAllocatedBlockListIndex = iBlockCountOfSmallestBlock * sizeof(BYTE);
+    dwSizeOfAllocatedBlockListIndex = lBlockCountOfSmallestBlock * sizeof(BYTE);
 
     // Calculate : Space required to store bitmap
     dwSizeOfBitmap = 0;
-    for(i=0; (iBlockCountOfSmallestBlock >> i)>0; i++) {
+    for(i=0; (lBlockCountOfSmallestBlock >> i) > 0; i++) {
         dwSizeOfBitmap += sizeof(BITMAP);                               // Space for a bitmap pointer in the block list
-        dwSizeOfBitmap += ((iBlockCountOfSmallestBlock >> i) + 7) / 8;  // Bitmap size of block list, rounded up in bytes
+        dwSizeOfBitmap += ((lBlockCountOfSmallestBlock >> i) + 7) / 8;  // Bitmap size of block list, rounded up in bytes
     }
     return (dwSizeOfAllocatedBlockListIndex + dwSizeOfBitmap + DYNAMICMEMORY_MIN_SIZE - 1) / DYNAMICMEMORY_MIN_SIZE;
 }

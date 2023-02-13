@@ -296,6 +296,9 @@ void kSchedule(void) {
     if(gs_stScheduler.qwLastFPUUsedTaskID != pstNextTask->stLink.qwID) kSetTS();
     else kClearTS();
 
+    // Update Processor
+    gs_stScheduler.iProcessorTime = TASK_PROCESSORTIME;
+
     // If the task end flag is set, the context does not need to be saved, so insert into the waiting list and switch the context
     if(pstRunningTask->qwFlags & TASK_FLAGS_ENDTASK) {
         kAddListToTail(&(gs_stScheduler.stWaitList), pstRunningTask);

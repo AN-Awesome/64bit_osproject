@@ -57,7 +57,7 @@ void kCheckTotalRAMSize(void) {
     // 0x4000000(64MB)
     // Start Check... per 4MB
     pdwCurrentAddress = (DWORD*)0x4000000;
-    while(1) {
+    while((QWORD)pdwCurrentAddress < (1 * 1024 * 1024 * 1024)) {
         dwPreviousValue = *pdwCurrentAddress;
         *pdwCurrentAddress = 0x12345678;
         if(*pdwCurrentAddress != 0x12345678) break;

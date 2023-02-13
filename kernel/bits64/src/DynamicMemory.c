@@ -40,7 +40,7 @@ void kInitializeDynamicMemory(void) {
         iBlockCountOfLevel = gs_stDynamicMemory.iBlockCountOfSmallestBlock >> j;
 
         // set all to empty
-        for(i=0; i<iBlockCountOfLevel / 8; i++) {
+        for(i=0; i<iBlockCountOfLevel/8; i++) {
             *pbCurrentBitmapPosition = 0x00;
             pbCurrentBitmapPosition++;
         }
@@ -72,9 +72,7 @@ static QWORD kCalculateDynamicMemorySize(void) {
 
     // Use up to 3GB
     qwRAMSize = (kGetTotalRAMSize() * 1024 * 1024);
-    if(qwRAMSize > (QWORD) 3 * 1024 * 1024 * 1024) {
-        qwRAMSize = (QWORD) 3 * 1024 * 1024 * 1024;
-    }
+    if(qwRAMSize > (QWORD) 3 * 1024 * 1024 * 1024) qwRAMSize = (QWORD) 3 * 1024 * 1024 * 1024;
     return qwRAMSize - DYNAMICMEMORY_START_ADDRESS;
 }
 
@@ -215,6 +213,7 @@ static int kFindFreeBlockInBitmap(int iBlockListIndex) {
         }
 
         if((pbBitmap[i / 8] & (DYNAMICMEMORY_EXIST << (i % 8))) != 0) return i;
+        i++;
     }
     return -1;
 }

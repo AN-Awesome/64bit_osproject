@@ -721,9 +721,11 @@ static void kTestSequentialAllocation(const char* pcParameterBuffer) {
                 return;
             }
             for(k = 0; k < (DYNAMICMEMORY_MIN_SIZE << i) / 8; k++) pqwBuffer[k] = k;
-            for(k = 0; k < (DYNAMICMEMORY_MIN_SIZE << i) / 8; k++) if(pqwBuffer[k] != k) {
+            for(k = 0; k < (DYNAMICMEMORY_MIN_SIZE << i) / 8; k++) {
+                if(pqwBuffer[k] != k) {
                     kPrintf("\nCompare Fail\n");
                     return;
+                }
             }
             kPrintf(".");
         }

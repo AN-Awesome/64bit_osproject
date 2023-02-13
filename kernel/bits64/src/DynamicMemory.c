@@ -285,11 +285,8 @@ static BOOL kFreeBuddyBlock(int iBlockListIndex, int iBlockOffset) {
         // Block Offset = even (left) -> check odd (right)
         // Block Offset = odd (right) -> check even (left)
         // Check the bitmap and combine adjacent blocks if present
-        if((iBlockOffset % 2) == 0) {
-            iBuddyBlockOffset = iBlockOffset + 1;
-        } else {
-            iBuddyBlockOffset = iBlockOffset - 1;
-        }
+        if((iBlockOffset % 2) == 0) iBuddyBlockOffset = iBlockOffset + 1;
+        else iBuddyBlockOffset = iBlockOffset - 1;
         bFlag = kGetFlagInBitmap(i, iBuddyBlockOffset);
 
         // Exit if the block is empty

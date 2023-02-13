@@ -12,6 +12,10 @@
 void kPrintString(int iX, int iY, const char* pcString, int color);
 
 void Main(void) {
+    char vcTemp[2] = {0, };
+    BYTE bFlags;
+    BYTE bTemp;
+    int i = 0;
     int iCursorX, iCursorY;
 
     kInitializeConsole(0, 2);

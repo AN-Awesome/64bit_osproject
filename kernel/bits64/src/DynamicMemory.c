@@ -1,6 +1,7 @@
 #include "DynamicMemory.h"
 #include "Utility.h"
 #include "Task.h"
+#include "Console.h"
 
 static DYNAMICMEMORY gs_stDynamicMemory;
 
@@ -19,7 +20,10 @@ void kInitializeDynamicMemory(void) {
     gs_stDynamicMemory.iBlockCountOfSmallestBlock = (qwDynamicMemorySize / DYNAMICMEMORY_MIN_SIZE) - iMetaBlockCount;
 
     // Calculate : Composed of up to several block lists
-    for(i = 0; (gs_stDynamicMemory.iBlockCountOfSmallestBlock >> i) > 0; i++); // DO NOTHING
+    for(i = 0; (gs_stDynamicMemory.iBlockCountOfSmallestBlock >> i) > 0; i++) {
+        //DO Nothing
+        ;
+    }
     gs_stDynamicMemory.iMaxLevelCount = i;
 
     // Init : Area to store the index of the block list
@@ -72,7 +76,7 @@ static QWORD kCalculateDynamicMemorySize(void) {
 
     // Use up to 3GB
     qwRAMSize = (kGetTotalRAMSize() * 1024 * 1024);
-    if(qwRAMSize > (QWORD) 3 * 1024 * 1024 * 1024) qwRAMSize = (QWORD) 3 * 1024 * 1024 * 1024;
+    if(qwRAMSize > (QWORD)(3 * 1024 * 1024 * 1024)) qwRAMSize = (QWORD)(3 * 1024 * 1024 * 1024);
     return qwRAMSize - DYNAMICMEMORY_START_ADDRESS;
 }
 
@@ -103,7 +107,7 @@ static int kCalculateMetaBlockCount(QWORD qwDynamicRAMSize) {
 void* kAllocateMemory(QWORD qwSize) {
     QWORD qwAlignedSize;
     QWORD qwRelativeAddress;
-    long iOffset;
+    long lOffset;
     int iSizeArrayOffset;
     int iIndexOfBlockList;
 
@@ -115,14 +119,14 @@ void* kAllocateMemory(QWORD qwSize) {
     if(gs_stDynamicMemory.qwStartAddress + gs_stDynamicMemory.qwUsedSize + qwAlignedSize > gs_stDynamicMemory.qwEndAddress) return NULL;
 
     // RETURN : Block list index (Allocate a buddy block and to which the allocated block belongs)
-    iOffset = kAllocationBuddyBlock(qwAlignedSize);
-    if(iOffset == -1) return NULL;
+    lOffset = kAllocationBuddyBlock(qwAlignedSize);
+    if(lOffset == -1) return NULL;
 
     iIndexOfBlockList = kGetBlockListIndexOfMatchSize(qwAlignedSize);
 
     // SAVE : Block List Index (The area where the block size is stored belongs to the actually allocated buddy block)
     // When freeing memory, use the index of the block list
-    qwRelativeAddress = qwAlignedSize = iOffset;
+    qwRelativeAddress = qwAlignedSize * lOffset;
     iSizeArrayOffset = qwRelativeAddress / DYNAMICMEMORY_MIN_SIZE;
 
     gs_stDynamicMemory.pbAllocateBlockListIndex[iSizeArrayOffset] = (BYTE)iIndexOfBlockList;
@@ -133,7 +137,7 @@ void* kAllocateMemory(QWORD qwSize) {
 // RETURN : sorted size (sorted by the size of the nearest buddy block)
 static QWORD kGetBuddyBlockSize(QWORD qwSize) {
     long i;
-    for(i=0; i<gs_stDynamicMemory.iMaxLevelCount; i++) {
+    for(i = 0; i < gs_stDynamicMemory.iMaxLevelCount; i++) {
         if(qwSize <= (DYNAMICMEMORY_MIN_SIZE << i)) return (DYNAMICMEMORY_MIN_SIZE << i);
     }
     return 0;

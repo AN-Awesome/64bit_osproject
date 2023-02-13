@@ -716,6 +716,7 @@ static void kTestSequentialAllocation(const char* pcParameterBuffer) {
 
         for(j = 0; j < (pstMemory->iBlockCountOfSmallestBlock >> i); j++) {
             pqwBuffer = kAllocateMemory(DYNAMICMEMORY_MIN_SIZE << i);
+            // kPrintf(pqwBuffer);
             if(pqwBuffer == NULL) {
                 kPrintf("\nAllocation Fail, Add=%X\n", pqwBuffer);
                 return;

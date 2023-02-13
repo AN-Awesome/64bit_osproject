@@ -19,12 +19,12 @@ void kInitializeDynamicMemory(void) {
     gs_stDynamicMemory.iBlockCountOfSmallestBlock = (qwDynamicMemorySize / DYNAMICMEMORY_MIN_SIZE) - iMetaBlockCount;
 
     // Calculate : Composed of up to several block lists
-    for(i=0; (gs_stDynamicMemory.iBlockCountOfSmallestBlock >> i)>0; i++); // DO NOTHING
+    for(i = 0; (gs_stDynamicMemory.iBlockCountOfSmallestBlock >> i) > 0; i++); // DO NOTHING
     gs_stDynamicMemory.iMaxLevelCount = i;
 
     // Init : Area to store the index of the block list
     gs_stDynamicMemory.pbAllocateBlockListIndex = (BYTE*)DYNAMICMEMORY_START_ADDRESS;
-    for(i=0; i<gs_stDynamicMemory.iBlockCountOfSmallestBlock; i++) gs_stDynamicMemory.pbAllocateBlockListIndex[i] = 0xFF;
+    for(i = 0; i < gs_stDynamicMemory.iBlockCountOfSmallestBlock; i++) gs_stDynamicMemory.pbAllocateBlockListIndex[i] = 0xFF;
 
     // Specify start address : Bitmap Data Structure
     gs_stDynamicMemory.pstBitmapOfLevel = (BITMAP*)(DYNAMICMEMORY_START_ADDRESS + (sizeof(BYTE) * gs_stDynamicMemory.iBlockCountOfSmallestBlock));
@@ -34,13 +34,13 @@ void kInitializeDynamicMemory(void) {
 
     // Creating a bitmap by looping through each block list
     // set to empty
-    for(j=0; j<gs_stDynamicMemory.iMaxLevelCount; j++) {
+    for(j = 0; j < gs_stDynamicMemory.iMaxLevelCount; j++) {
         gs_stDynamicMemory.pstBitmapOfLevel[j].pbBitmap = pbCurrentBitmapPosition;
         gs_stDynamicMemory.pstBitmapOfLevel[j].qwExistBitCount = 0;
         iBlockCountOfLevel = gs_stDynamicMemory.iBlockCountOfSmallestBlock >> j;
 
         // set all to empty
-        for(i=0; i<iBlockCountOfLevel/8; i++) {
+        for(i = 0; i < iBlockCountOfLevel / 8; i++) {
             *pbCurrentBitmapPosition = 0x00;
             pbCurrentBitmapPosition++;
         }

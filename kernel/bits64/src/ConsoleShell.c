@@ -717,7 +717,7 @@ static void kTestSequentialAllocation(const char* pcParameterBuffer) {
         for(j = 0; j < (pstMemory->iBlockCountOfSmallestBlock >> i); j++) {
             pqwBuffer = kAllocateMemory(DYNAMICMEMORY_MIN_SIZE << i);
             if(pqwBuffer == NULL) {
-                kPrintf("\nAllocation Fail\n");
+                kPrintf("\nAllocation Fail, Add=%X\n", pqwBuffer);
                 return;
             }
             for(k = 0; k < (DYNAMICMEMORY_MIN_SIZE << i) / 8; k++) pqwBuffer[k] = k;
@@ -788,5 +788,6 @@ static void kRandomAllocationTask(void) {
 // Test repeats creating multiple tasks to allocate and clear random memory
 static void kTestRandomAllocation(const char* pcParameterBuffer) {
     int i;
+
     for(i = 0; i < 1000; i++) kCreateTask(TASK_FLAGS_LOWEST | TASK_FLAGS_THREAD, 0, 0, (QWORD)kRandomAllocationTask);
 }

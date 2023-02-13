@@ -696,7 +696,7 @@ static void kShowDynamicMemoryInformation(const char* pcParameterBuffer) {
     kGetDynamicMemoryInformation(&qwStartAddress, &qwTotalSize, &qwMetaSize, &qwUsedSize);
 
     kPrintf("============ Dynamic Memory Information ============\n");
-    kPrintf("Start Address: [0x%q]\n", qwStartAddress);
+    kPrintf("Start Address: [0x%Q]\n", qwStartAddress);
     kPrintf("Total Size: [0x%Q]byte, [%d]MB\n", qwTotalSize, qwTotalSize / 1024 / 1024);
     kPrintf("Meta Size: [0x%Q]byte, [%d]KB\n", qwMetaSize, qwMetaSize /1024);
     kPrintf("Used Size: [0x%Q]byte, [%d]KB\n", qwUsedSize, qwUsedSize / 1024);

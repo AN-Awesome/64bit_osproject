@@ -10,5 +10,6 @@ void kKeyboardHandler(int iVectorNumber);
 void kTimerHandler(int iVectorNumber);
 
 void kDeviceNotAvailableHandler(int iVectorNumber); // 22 chapter
+void kHDDHandler(int iVectorNumber);
 
 #endif

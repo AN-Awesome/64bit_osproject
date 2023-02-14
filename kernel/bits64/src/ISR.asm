@@ -4,6 +4,7 @@ SECTION .text
 ; INPUT FUNCTION
 extern kCommonExceptionHandler, kCommonInterruptHandler, kKeyboardHandler
 extern kTimerHandler, kDeviceNotAvailableHandler
+extern kHDDHandler
 
 ; OUTPUT FUNCTION
 ; Process Exception
@@ -470,7 +471,7 @@ kISRHDD1:                       ; INT. NO: 46 - HARD DISK 1 ISR
     KSAVECONTEXT
 
     mov rdi, 46                     ; SET INTERRUPT NUMBER
-    call kCommonInterruptHandler    ; RUN HANDLER
+    call kHDDHandler                ; RUN HANDLER
 
     KLOADCONTEXT
     iretq
@@ -479,7 +480,7 @@ kISRHDD2:                       ; INT. NO: 47 - HARD DISK 2 ISR
     KSAVECONTEXT
 
     mov rdi, 47                     ; SET INTERRUPT NUMBER
-    call kCommonInterruptHandler    ; RUN HANDLER
+    call kHDDHandler                ; RUN HANDLER
 
     KLOADCONTEXT
     iretq

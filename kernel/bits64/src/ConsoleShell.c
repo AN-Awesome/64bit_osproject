@@ -11,6 +11,7 @@
 #include "ConsoleEster.h"
 #include "DynamicMemory.h"
 #include "HardDisk.h"       // 24 chapter
+#include "FileSystem.h"     // 25 chapter
 
 // Command Table def.
 SHELLCOMMANDENTRY gs_vstCommandTable[] = {
@@ -42,6 +43,13 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"hddinfo", "Show HDD Information", kShowHDDInformation},
     {"readsector", "Read HDD Sector, ex)readsector 0(LBA) 10(count)", kReadSector},
     {"writesector", "Write HDD Sector, ex)writesector 0(LBA) 10(count)", kWriteSector},
+    // 25 chapter
+    {"mounthdd", "Mount HDD", kMountHDD},
+    {"formathdd", "Format HDD", kFormatHDD},
+    {"filesysteminfo", "Show File System Information", kShowFileSystemInformation},
+    {"createfile", "Create File, ex)createfile a.txt", kCreateFileInRootDirectory},
+    {"deletefile", "Delete File, ex)deletefile a.txt", kDeleteFileInRootDirectory},
+    {"dir", "Show Directory", kShowRootDirectory},
 };
 
 // generate random numbers Variable
@@ -804,7 +812,10 @@ static void kShowHDDInformation(const char* pcParameterBuffer) {
     char vcBuffer[100];
 
     // Read HDD information
-    if(kReadHDDInformation(TRUE, TRUE, &stHDD) == FALSE) {
+    /* 24chapter
+    if(kReadHDDInformation(TRUE, TRUE, &stHDD) == FALSE) { 
+    */
+    if(kGetHDDInFormation( &stHDD) == FALSE) {  // 25 chapter
         kPrintf("HDD Information Read Fail\n");
         return;
     }
@@ -941,4 +952,191 @@ static void kWriteSector(const char* pcParameterBuffer) {
     }
     kPrintf("\n");
     kFreeMemory(pcBuffer);
+}
+
+// 25 chapter
+// Connect HDD
+static void kMountHDD(const char* pcParameterBuffer) {
+    if(kMount() == FALSE) {
+        kPrintf("HDD Mount Fail\n");
+        return;
+    }
+    kPrintf("HDD Mount Success\n");
+}
+
+// format : HDD File System
+static void kFormatHDD(const char* pcParameterBuffer) {
+    if(kFormat() == FALSE) {
+        kPrintf("HDD Format Fail\n");
+        return;
+    }
+    kPrintf("HDD Format Success\n");
+}
+
+// Show : File System info
+static void kShowFileSystemInformation(const char* pcParameterBuffer) {
+    FILESYSTEMMANAGER stManager;
+    kGetFileSystemInformation( &stManager);
+    kPrintf("========== File System Information ==========\n");
+    kPrintf("Mouted:\t\t\t\t\t %d\n", stManager.bMounted);
+    kPrintf("Reserved Sector Count:\t\t\t %d Secotr\n", stManager.dwReservedSectorCount);
+    kPrintf("Cluster Link Table Start Address:\t %d Sector\n", stManager.dwClusterLinkAreaStartAddress);
+    kPrintf("Cluster Link Table Size:\t\t %d Sector\n", stManager.dwClusterLinkAreaSize);
+    kPrintf("Data Area Start Address:\t\t %d Sector\n", stManager.dwDataAreaStartAddress);
+    kPrintf("Total Cluster Count:\t\t\t %d Cluster\n", stManager.dwTotalClusterCount);
+}
+
+// Create empty file (in root directory)
+static void kCreateFileInRootDirectory(const char* pcParameterBuffer) {
+    PARAMETERLIST stList;
+    char vcFileName[50];
+    int iLength;
+    DWORD dwCluster;
+    DIRECTORYENTRY stEntry;
+    int i;
+
+    // Init parameter list -> extract filename
+    kInitializeParameter( &stList, pcParameterBuffer);
+    iLength = kGetNextParameter( &stList, vcFileName);
+    vcFileName[iLength] = '\0';
+    if((iLength > (sizeof(stEntry.vcFileName) - 1)) || (iLength == 0)) {
+        kPrintf("Too Long or Too Short File Name\n");
+        return;
+    }
+
+    // Find empty cluster -> Set allotted
+    dwCluster = kFindFreeCluster();
+    if((dwCluster == FILESYSTEM_LASTCLUSTER) || (kSetClusterLinkData(dwCluster, FILESYSTEM_LASTCLUSTER) == FALSE)) {
+        kPrintf("Cluster Allocation Fail\n");
+        return;
+    }
+
+    // Search empty directory entries
+    i = kFindFreeDirectoryEntry();
+    if(i == -1) {
+        kSetClusterLinkData(dwCluster, FILESYSTEM_FREECLUSTER);
+        kPrintf("Directory Entry is Full\n");
+        return;
+    }
+
+    // Set directory entry
+    kMemCpy(stEntry.vcFileName, vcFileName, iLength + 1);
+    stEntry.dwStartClusterIndex = dwCluster;
+    stEntry.dwFileSize = 0;
+
+    // register directory entry
+    if(kSetDirectoryEntryData(i, &stEntry) == FALSE) {
+        kSetClusterLinkData(dwCluster, FILESYSTEM_FREECLUSTER);
+        kPrintf("Directory Entry Set Fail\n");
+    }
+    kPrintf("File Create Success\n");
+}
+
+// Delete files from root directory
+static void kDeleteFileinRootDirectory(const char* pcParameterBuffer) {
+    PARAMETERLIST stList;
+    char vcFileName[50];
+    int iLength;
+    DIRECTORYENTRY stEntry;
+    int iOffset;
+
+    // Init parameter list -> extract filename
+    kInitializeParameter( &stList, pcParameterBuffer);
+    iLength = kGetNextParameter( &stList, vcFileName);
+    vcFileName[iLength] = '\0';
+
+    if((iLength > (sizeof(stEntry.vcFileName) - 1)) || (iLength == 0)) {
+        kPrintf("Too Long or Too Short File Name\n");
+        return;
+    }
+
+    // Search directory entries by file name
+    iOffset = kFindDirectoryEntry(vcFileName, &stEntry);
+    if(iOffset == -1){
+        kPrintf("File Not Found\n");
+        return;
+    }
+
+    // Return Cluster
+    if(kSetClusterLinkData(stEntry.dwStartClusterIndex, FILESYSTEM_FREECLUSTER) == FALSE) {
+        kPrintf("Cluster Free Fail\n");
+        return;
+    }
+
+    // Init all directory entries
+    // set empty
+    // Overwrite Offset
+    kMemSet( &stEntry, 0 sizeof(stEntry));
+    if(kSetDirectoryEntryData(iOffset, &stEntry) == FALSE) {
+        kPrintf("Root Directory Update Fail\n");
+        return;
+    }
+    kPrintf("File Delete Success\n");
+}
+
+// Display Root Directory file list
+static void kShowRootDirectory(const char* pcParameterBuffer) {
+    BYTE pbClusterBuffer;
+    int i, iCount, iTotalCount;
+    DIRECTORYENTRY* pstEntry;
+    char vcBuffer[400];
+    char vcTempValue[50];
+    DWORD dwTotalByte;
+
+    pbClusterBuffer = kAllocateMemory(FILESYSTEM_SECTORSPERCLUSTER * 512);
+
+    // Read Root directory
+    if(kReadCluster(0, pbClusterBuffer) == FALSE) {
+        kPrintf("Root Directory Read Fail\n");
+        return;
+    }
+
+    // Loop through 
+    // count number of files (in directory) 
+    // count number of size used by all file
+    pstEntry = (DIRECTORYENTRY*) pbClusterBuffer;
+    iTotalCount = 0;
+    dwTotalByte = 0;
+    for(i = 0; i < FILESYSTEM_MAXDIRECTORYENTRYCOUNT; i++) {
+        if(pstEntry[i].dwStartClusterIndex == 0) continue;
+        iTotalCount++;
+        dwTotalByte += pstEntry[i].dwFileSize;
+    }
+
+    // Loop : Display contents of actual file
+    pstEntry = (DIRECTORYENTRY*) pbClusterBuffer;
+    iCount = 0;
+    for(i = 0; i < FILESYSTEM_MAXDIRECTORYENTRYCOUNT; i++) {
+        if(pstEntry[i].dwStartClusterIndex == 0) continue;
+
+        // Init all
+        // Assign values to each position
+        kMemSet(vcBuffer, ' ', sizeof(vcBuffer) - 1);
+        vcBuffer[sizeof(vcBuffer) - 1] = '\0';
+
+        // Insert file name
+        kMemCpy(vcBuffer, pstEntry[i].vcFileName, kStrLen(pstEntry[i].vcFileName));
+
+        // Insert file lenght
+        kSPrintf(vcTempValue, "%d Byte", pstEntry[i].dwFileSize);
+        kMemCpy(vcBuffer + 30, vcTempValue, kStrLen(vcTempValue));
+
+        // Insert file start cluster
+        kSPrintf(vcTempValue, "0x%X Cluster", pstEntry[i].dwStartClusterIndex);
+        kMemCpy(vcBuffer + 55, vcTempValue, kStrLen(vcTempValue) + 1);
+        kPrintf("  %s\n", vcBuffer);
+
+        if((iCount != 0) && ((iCount % 20) == 0)) {
+            kPrintf("Press any key to continue... ('q' is exit) : ");
+            if(kGetCh() == 'q') {
+                kPrintf("\n");
+                break;
+            }
+        }
+        iCount++;
+    }
+    // Print Total number of files
+    // Print Total size of files
+    kPrintf("\t Total File Count: %d\t Total File Size: %d Byte\n", iTotalCount, dwTotalByte);
+    kFreeMemory(pbClusterBuffer);
 }

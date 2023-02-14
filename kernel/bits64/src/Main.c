@@ -2,6 +2,7 @@
 #include "Keyboard.h"
 #include "Descriptor.h"
 #include "TextColor.h"
+#include "FileSystem.h"
 #include "PIC.h"
 #include "PIT.h"
 #include "ConsoleShell.h"
@@ -48,10 +49,14 @@ void Main(void) {
 
     kEnableInterrupt();
 
+    // Init HDD
     if(kInitializeHDD() == TRUE) ;
-    else {
-        kPrintStringXY(0, 0, "HARDDISK ERROR", RED);
-    }
+    else kPrintStringXY(0, 0, "HARDDISK ERROR", RED);
+
+    // Init File System
+    if(kInitializeFileSystem() == TRUE) ;
+    else kPrintStringXY(0, 1, "FILESYSTEM ERROR", RED);
+
     kCreateTask(TASK_FLAGS_LOWEST | TASK_FLAGS_THREAD | TASK_FLAGS_SYSTEM | TASK_FLAGS_IDLE, 0, 0, (QWORD)kIdleTask);
     kStartConsoleShell();
 }

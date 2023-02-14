@@ -3,7 +3,7 @@
 SECTION .text
 
 ; OBJECT :: ./src/AssemblyUtility.h
-global kInPortByte, kOutPortByte, kInPortWord, kOutPortWord kLoadGDTR, kLoadTR, kLoadIDTR
+global kInPortByte, kOutPortByte, kInPortWord, kOutPortWord, kLoadGDTR, kLoadTR, kLoadIDTR
 global kEnableInterrupt, kDisableInterrupt, kReadRFLAGS
 global kReadTSC
 global kSwitchContext   ; 20장
@@ -49,7 +49,7 @@ kInPortWord:
     ret
 
 ; Write 2 byte to the port
-kOutPortByte:
+kOutPortWord:
     push rdx
     push rax
 

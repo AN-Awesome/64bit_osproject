@@ -37,7 +37,7 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"testpie", "Test PIE Calculation", kTestPIE},
     {"dynamicmeminfo", "Show Dyanmic Memory Information", kShowDynamicMemoryInformation},
     {"testseqalloc", "Test Sequential Allocation & Free", kTestSequentialAllocation},
-    {"testranalloc", "Test Random Allocation & Free", kTestRandomAllocation}
+    {"testranalloc", "Test Random Allocation & Free", kTestRandomAllocation},
     // 24 chapter
     {"hddinfo", "Show HDD Information", kShowHDDInformation},
     {"readsector", "Read HDD Sector, ex)readsector 0(LBA) 10(count)", kReadSector},
@@ -812,7 +812,7 @@ static void kShowHDDInformation(const char* pcParameterBuffer) {
     kPrintf("========== Primary Master HDD Information ==========\n");
 
     // Print Model Number
-    kMemCpy(vcBuffer, stHDD.vwModelNuber, sizeof(stHDD.vwModelNumber));
+    kMemCpy(vcBuffer, stHDD.vwModelNumber, sizeof(stHDD.vwModelNumber));
     vcBuffer[sizeof(stHDD.vwModelNumber) - 1] = '\0';
     kPrintf("Model Number:\t %s\n", vcBuffer);
 
@@ -872,7 +872,7 @@ static void kReadSector(const char* pcParameterBuffer) {
                 // Add '0' if less than 16
                 bData = pcBuffer[j * 512 + i] & 0xFF;
                 if(bData < 16) kPrintf("0");
-                kPrintf("%X", bData);
+                kPrintf("%X ", bData);
             }
             if(bExit == TRUE) break;
         }
@@ -908,8 +908,8 @@ static void kWriteSector(const char* pcParameterBuffer) {
     pcBuffer = kAllocateMemory(iSectorCount * 512);
     for(j = 0; j<iSectorCount; j++) {
         for(i = 0; i < 512; i += 8) {
-            *(DWORD) &(pcBuffer[j * 512 + i]) = dwLBA + j;
-            *(DWORD) &(pcBuffer[j * 512 + i + 4]) = s_dwWriteCount;
+            *(DWORD*) &(pcBuffer[j * 512 + i]) = dwLBA + j;
+            *(DWORD*) &(pcBuffer[j * 512 + i + 4]) = s_dwWriteCount;
         }
     }
     // Perform Write
@@ -935,7 +935,7 @@ static void kWriteSector(const char* pcParameterBuffer) {
             // Add '0' if less than 16
             bData = pcBuffer[j * 512 + i] & 0xFF;
             if(bData < 16) kPrintf("0");
-            kPrintf("%X", bData);
+            kPrintf("%X ", bData);
         }
         if(bExit == TRUE) break;
     }

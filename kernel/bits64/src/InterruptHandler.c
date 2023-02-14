@@ -141,7 +141,7 @@ void kHDDHandler(int iVectorNumber) {
     // Print Count
     vcBuffer[8] = '0' + g_iHDDInterruptCount;
     g_iHDDInterruptCount = (g_iHDDInterruptCount + 1) % 10;
-    kPrintStringXY(70, 4, vcBuffer);
+    kPrintStringXY(70, 4, vcBuffer, PINK_BR);
 
     if(iVectorNumber - PIC_IRQSTARTVECTOR == 14) kSetHDDInterruptFlag(TRUE, TRUE);
     else kSetHDDInterruptFlag(FALSE, FALSE);

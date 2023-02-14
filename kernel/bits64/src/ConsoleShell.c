@@ -10,6 +10,7 @@
 #include "TextColor.h"
 #include "ConsoleEster.h"
 #include "DynamicMemory.h"
+#include "HardDisk.h"       // 24 chapter
 
 // Command Table def.
 SHELLCOMMANDENTRY gs_vstCommandTable[] = {
@@ -37,6 +38,10 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"dynamicmeminfo", "Show Dyanmic Memory Information", kShowDynamicMemoryInformation},
     {"testseqalloc", "Test Sequential Allocation & Free", kTestSequentialAllocation},
     {"testranalloc", "Test Random Allocation & Free", kTestRandomAllocation}
+    // 24 chapter
+    {"hddinfo", "Show HDD Information", kShowHDDInformation},
+    {"readsector", "Read HDD Sector, ex)readsector 0(LBA) 10(count)", kReadSector},
+    {"writesector", "Write HDD Sector, ex)writesector 0(LBA) 10(count)", kWriteSector},
 };
 
 // generate random numbers Variable
@@ -791,4 +796,149 @@ static void kTestRandomAllocation(const char* pcParameterBuffer) {
     int i;
 
     for(i = 0; i < 1000; i++) kCreateTask(TASK_FLAGS_LOWEST | TASK_FLAGS_THREAD, 0, 0, (QWORD)kRandomAllocationTask);
+}
+
+// Show HDD information
+static void kShowHDDInformation(const char* pcParameterBuffer) {
+    HDDINFORMATION stHDD;
+    char vcBuffer[100];
+
+    // Read HDD information
+    if(kReadHDDInformation(TRUE, TRUE, &stHDD) == FALSE) {
+        kPrintf("HDD Information Read Fail\n");
+        return;
+    }
+
+    kPrintf("========== Primary Master HDD Information ==========\n");
+
+    // Print Model Number
+    kMemCpy(vcBuffer, stHDD.vwModelNuber, sizeof(stHDD.vwModelNumber));
+    vcBuffer[sizeof(stHDD.vwModelNumber) - 1] = '\0';
+    kPrintf("Model Number:\t %s\n", vcBuffer);
+
+    // Print Serial Number
+    kMemCpy(vcBuffer, stHDD.vwSerialNumber, sizeof(stHDD.vwSerialNumber));
+    vcBuffer[sizeof(stHDD.vwSerialNumber) -1] = '\0';
+    kPrintf("Serial Number:\t %s\n", vcBuffer);
+
+    // Print Sector Number Count 
+    kPrintf("Head Count:\t %d\n", stHDD.wNumberOfHead);
+    kPrintf("Cylinder Count:\t %d\n", stHDD.wNumberOfCylinder);
+    kPrintf("Sector Count:\t %d\n", stHDD.wNumberOfSectorPerCylinder);
+
+    // Print Total Sector Count
+    kPrintf("Total Sector:\t %d Sector, %dMB\n", stHDD.dwTotalSectors, stHDD.dwTotalSectors / 2 / 1024);
+}
+
+// Read sectors from the LBA address
+static void kReadSector(const char* pcParameterBuffer) {
+    PARAMETERLIST stList;
+    char vcLBA[50], vcSectorCount[50];
+    DWORD dwLBA;
+    int iSectorCount;
+    char* pcBuffer;
+    int i, j;
+    BYTE bData;
+    BOOL bExit = FALSE;
+
+    // Init : Parameter List
+    // Extraction : LBA addrss and number of Sectors
+    kInitializeParameter(&stList, pcParameterBuffer);
+    if((kGetNextParameter(&stList, vcLBA) == 0) || (kGetNextParameter(&stList, vcSectorCount) == 0)) {
+        kPrintf("ex) readsector 0(LBA) 10(count)\n");
+        return;
+    }
+    dwLBA = kAToI(vcLBA, 10);
+    iSectorCount = kAToI(vcSectorCount, 10);
+
+    // Number of Secotrs Allocate and read memory
+    pcBuffer = kAllocateMemory(iSectorCount * 512);
+    if(kReadHDDSector(TRUE, TRUE, dwLBA, iSectorCount, pcBuffer) == iSectorCount) {
+        kPrintf("LBA [%d], [%d] Sector Read Success~!", dwLBA, iSectorCount);
+
+        // Print Data Buffer Contents
+        for(j = 0; j < iSectorCount; j++) {
+            for(i = 0; i < 512; i++) {
+                if(!((j == 0) && (i == 0)) && ((i % 256) == 0)) {
+                    kPrintf("\nPress and key to continue... ('q' is exit) : ");
+                    if(kGetCh() == 'q') {
+                        bExit = TRUE;
+                        break;
+                    }
+                }
+                if((i % 16) == 0) kPrintf("\n[LBA:%d, Offset:%d]\t| ", dwLBA + j, i);
+
+                // Show all two digits
+                // Add '0' if less than 16
+                bData = pcBuffer[j * 512 + i] & 0xFF;
+                if(bData < 16) kPrintf("0");
+                kPrintf("%X", bData);
+            }
+            if(bExit == TRUE) break;
+        }
+    } else kPrintf("Read Fail\n");
+    kFreeMemory(pcBuffer);
+}
+
+// Write : From LBA address To number of sectors
+static void kWriteSector(const char* pcParameterBuffer) {
+    PARAMETERLIST stList;
+    char vcLBA[50], vcSectorCount[50];
+    DWORD dwLBA;
+    int iSectorCount;
+    char* pcBuffer;
+    int i, j;
+    BOOL bExit = FALSE;
+    BYTE bData;
+    static DWORD s_dwWriteCount = 0;
+
+    // Init : Parameter List
+    // Extraction : LBA address & Number of Sector 
+    kInitializeParameter(&stList, pcParameterBuffer);
+    if((kGetNextParameter(&stList, vcLBA) == 0) || (kGetNextParameter(&stList, vcSectorCount) == 0)) {
+        kPrintf("ex) writesector 0(LBA) 10(count)\n");
+        return;
+    }
+    dwLBA = kAToI(vcLBA, 10);
+    iSectorCount = kAToI(vcSectorCount, 10);
+
+    s_dwWriteCount++;
+    // Allocate Buffer -> Fill Data 
+    // Produce Patern : 4 Byte LBA address & 4 Byte number of writes performed
+    pcBuffer = kAllocateMemory(iSectorCount * 512);
+    for(j = 0; j<iSectorCount; j++) {
+        for(i = 0; i < 512; i += 8) {
+            *(DWORD) &(pcBuffer[j * 512 + i]) = dwLBA + j;
+            *(DWORD) &(pcBuffer[j * 512 + i + 4]) = s_dwWriteCount;
+        }
+    }
+    // Perform Write
+    if(kWriteHDDSector(TRUE, TRUE, dwLBA, iSectorCount, pcBuffer) != iSectorCount) {
+        kPrintf("Write Fail\n");
+        return;
+    }
+    kPrintf("LBA [%d], [%d] Sector Read Success~!", dwLBA, iSectorCount);
+
+    // Print Data Buffer Contents
+    for(j = 0; j < iSectorCount; j++) {
+        for(i = 0; i < 512; i++) {
+            if( !((j == 0) && (i == 0)) && (( i % 256) == 0)) {
+                kPrintf("\nPress any Key to continue... ('q' is exit) : ");
+                if(kGetCh() == 'q') {
+                    bExit = TRUE;
+                    break;
+                }
+            }
+            if((i % 16) == 0) kPrintf("\n[LBA:%d, Offset:%d]\t| ", dwLBA + j, i);
+
+            // Show all two digits
+            // Add '0' if less than 16
+            bData = pcBuffer[j * 512 + i] & 0xFF;
+            if(bData < 16) kPrintf("0");
+            kPrintf("%X", bData);
+        }
+        if(bExit == TRUE) break;
+    }
+    kPrintf("\n");
+    kFreeMemory(pcBuffer);
 }

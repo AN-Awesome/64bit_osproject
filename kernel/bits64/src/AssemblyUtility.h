@@ -27,6 +27,9 @@ void kSaveFPUContext(void* pvFPUContext);
 void kLoadFPUContext(void* pvFPUContext);
 void kSetTS(void);
 void kClearTS(void);
+
+WORD kInPortWord(WORD wPort);
+void kOutPortWord(WORD wPort, WORD wData);
 //========================================
 
 #endif

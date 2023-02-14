@@ -3,7 +3,7 @@
 SECTION .text
 
 ; OBJECT :: ./src/AssemblyUtility.h
-global kInPortByte, kOutPortByte, kLoadGDTR, kLoadTR, kLoadIDTR
+global kInPortByte, kOutPortByte, kInPortWord, kOutPortWord kLoadGDTR, kLoadTR, kLoadIDTR
 global kEnableInterrupt, kDisableInterrupt, kReadRFLAGS
 global kReadTSC
 global kSwitchContext   ; 20장
@@ -35,6 +35,30 @@ kOutPortByte:
                     ; Writes one byte stored in the AL register to the port address stored in the DX register
     pop rax
     pop rdx         
+    ret
+
+; Read 2 byte to the port
+kInPortWord:
+    push rdx
+
+    mov rdx, rdi
+    mov rax, 0
+    in ax, dx
+
+    pop rdx
+    ret
+
+; Write 2 byte to the port
+kOutPortByte:
+    push rdx
+    push rax
+
+    mov rdx, rdi
+    mov rax, rsi
+    out dx, ax
+
+    pop rax
+    pop rdx
     ret
 
 ; PARAM: QWORD qwGDTRAddress

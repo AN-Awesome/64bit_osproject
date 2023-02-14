@@ -6,6 +6,7 @@
 #include "PIT.h"
 #include "ConsoleShell.h"
 #include "Console.h"
+#include "HardDisk.h"
 #include "DynamicMemory.h"
 #include "Task.h"
 
@@ -47,6 +48,10 @@ void Main(void) {
 
     kEnableInterrupt();
 
+    if(kInitializeHDD() == TRUE) ;
+    else {
+        kPrintStringXY(0, 0, "HARDDISK ERROR", RED);
+    }
     kCreateTask(TASK_FLAGS_LOWEST | TASK_FLAGS_THREAD | TASK_FLAGS_SYSTEM | TASK_FLAGS_IDLE, 0, 0, (QWORD)kIdleTask);
     kStartConsoleShell();
 }

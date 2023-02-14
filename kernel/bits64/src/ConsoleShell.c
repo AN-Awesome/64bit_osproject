@@ -815,7 +815,7 @@ static void kShowHDDInformation(const char* pcParameterBuffer) {
     /* 24chapter
     if(kReadHDDInformation(TRUE, TRUE, &stHDD) == FALSE) { 
     */
-    if(kGetHDDInFormation( &stHDD) == FALSE) {  // 25 chapter
+    if(kGetHDDInformation(&stHDD) == FALSE) {  // 25 chapter
         kPrintf("HDD Information Read Fail\n");
         return;
     }
@@ -1033,7 +1033,7 @@ static void kCreateFileInRootDirectory(const char* pcParameterBuffer) {
 }
 
 // Delete files from root directory
-static void kDeleteFileinRootDirectory(const char* pcParameterBuffer) {
+static void kDeleteFileInRootDirectory(const char* pcParameterBuffer) {
     PARAMETERLIST stList;
     char vcFileName[50];
     int iLength;
@@ -1066,7 +1066,7 @@ static void kDeleteFileinRootDirectory(const char* pcParameterBuffer) {
     // Init all directory entries
     // set empty
     // Overwrite Offset
-    kMemSet( &stEntry, 0 sizeof(stEntry));
+    kMemSet(&stEntry, 0, sizeof(stEntry));
     if(kSetDirectoryEntryData(iOffset, &stEntry) == FALSE) {
         kPrintf("Root Directory Update Fail\n");
         return;

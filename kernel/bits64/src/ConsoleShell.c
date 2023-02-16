@@ -1000,7 +1000,7 @@ static void kCreateFileInRootDirectory(const char* pcParameterBuffer) {
     kInitializeParameter(&stList, pcParameterBuffer);
     iLength = kGetNextParameter(&stList, vcFileName);
     vcFileName[iLength] = '\0';
-    if((iLength > (sizeof(stEntry.vcFileName) - 1)) || (iLength == 0)) {
+    if((iLength > (FILESYSTEM_MAXFILENAMELENGTH - 1)) || (iLength == 0)) {
         kPrintf("Too Long or Too Short File Name\n");
         return;
     }
@@ -1042,10 +1042,8 @@ static void kDeleteFileInRootDirectory(const char* pcParameterBuffer) {
 
 // Display Root Directory file list
 static void kShowRootDirectory(const char* pcParameterBuffer) {
-    DIR *pstDirectory;
-    BYTE* pbClusterBuffer;
-    int i, iCount;
-    int iTotalCount;
+    DIR* pstDirectory;
+    int i, iCount, iTotalCount;
     struct dirent* pstEntry;
     char vcBuffer[400];
     char vcTempValue[50];
@@ -1067,19 +1065,22 @@ static void kShowRootDirectory(const char* pcParameterBuffer) {
     while(1) {
         pstEntry = readdir(pstDirectory);
         if(pstEntry == NULL) break;
-        iTotalCount++;
 
+        iTotalCount++;
         dwTotalByte += pstEntry->dwFileSize;
 
         if(pstEntry->dwFileSize == 0) dwUsedClusterCount++;
         else dwUsedClusterCount += (pstEntry->dwFileSize + (FILESYSTEM_CLUSTERSIZE - 1) / FILESYSTEM_CLUSTERSIZE);   
     }
 
+    kPrintf("TEST----");
+
     rewinddir(pstDirectory);
     iCount = 0;
     while(1) {
         pstEntry = readdir(pstDirectory);
         if(pstEntry = NULL) break;
+
         kMemSet(vcBuffer, ' ', sizeof(vcBuffer) - 1);
         vcBuffer[sizeof(vcBuffer) - 1] = '\0';
 

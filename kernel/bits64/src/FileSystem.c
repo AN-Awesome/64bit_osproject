@@ -26,7 +26,7 @@ BOOL kInitializeFileSystem(void) {
     // Allocate Space for Handle
     gs_stFileSystemManager.pstHandlePool = (FILE*)kAllocateMemory(FILESYSTEM_HANDLE_MAXCOUNT * sizeof(FILE));
     // Set HardDisk as Unrecognized if Memory Allocation Fail
-    if(gs_stFileSystemManager.pstHandPool == NULL) {
+    if(gs_stFileSystemManager.pstHandlePool == NULL) {
         gs_stFileSystemManager.bMounted = FALSE;
         return FALSE;
     }
@@ -297,11 +297,11 @@ static void kFreeFileDirectoryHandle(FILE* pstFile) {
     pstFile->bType = FILESYSTEM_TYPE_FREE;
 }
 // Make File
-static BOOL kCreateFile(cosnt char* pcFileName, DIRECTORYENTRY* pstEntry, int* piDirectoryEntryIndex) {
+static BOOL kCreateFile(const char* pcFileName, DIRECTORYENTRY* pstEntry, int* piDirectoryEntryIndex) {
     DWORD dwCluster;
     // Find Empty Cluster and Set Allocated
     dwCluster = kFindFreeCluster();
-    if((dwCluster == FILESYSTEM_LASTCLUSTER) || (kSeetClusterLinkData(dwCluster, FILESYSTEM_LASTCLUSTER) == FALSE)) return FALSE;
+    if((dwCluster == FILESYSTEM_LASTCLUSTER) || (kSetClusterLinkData(dwCluster, FILESYSTEM_LASTCLUSTER) == FALSE)) return FALSE;
     // Search Empty Directory Entry
     *piDirectoryEntryIndex = kFindFreeDirectoryEntry();
     if(*piDirectoryEntryIndex == -1) {
@@ -369,6 +369,207 @@ FILE* kOpenFile(const char* pcFileName, const char* pcMode) {
             return NULL;
         }
     }
-    //=================================================
-    // If Option to empty contents of File, remove all clusters attached to the file and set the file size to zero
+    //====================================================================================================
+    // If Option to empty contents of File, Remove all clusters attached to file and set file size to Zero
+    //====================================================================================================
+    else if(pcMode[0] == 'w') {
+        // Find Start Cluster's Next Cluster
+        if(kGetClusterLinkData(stEntry.dwStartClusterIndex, &dwSecondCluster) == FALSE) {
+            kUnlock(&(gs_stFileSystemManager.stMutex)); // Sync.
+            return NULL;
+        } 
+        // Make Start Cluster to Last Cluster
+        if(kSetClusterLinkData(stEntry.dwStartClusterIndex, FILESYSTEM_LASTCLUSTER) == FALSE) {
+        // Sync.
+        kUnlock( &(gs_stFileSystemManager.stMutex));
+        return NULL;
+        }
+        // Disable Next Cluster to Last Cluster
+        if(kFreeClusterUntilEnd(dwSecondCluster) == FALSE) {
+        // Sync.
+        kUnlock(&(gs_stFileSystemManager.stMutex));
+        return NULL;
+        }
+        // Set Size to 0 beacause All Contents of File are Empty
+        stEntry.dwFileSize = 0;
+        if(kSetDirectoryEntryData(iDirectoryEntryOffset, &stEntry) == FALSE) {
+        // Sync.
+        kUnlock(&(gs_stFileSystemManager.stMutex));
+        return NULL;
+        }
+    }
+    //=============================================
+    // File Handle Assigned, Set Data, and Return
+    //=============================================
+    pstFile = kAllocateFileDirectoryHandle();
+    if(pstFile == NULL) {
+        // Sync.
+        kUnlock(&(gs_stFileSystemManager.stMutex));
+        return NULL;
+    }
+    // Set Info. at File Handle
+    pstFile->bType = FILESYSTEM_TYPE_FILE;
+    pstFile->stFileHandle.iDirectoryEntryOffset = iDirectoryEntryOffset;
+    pstFile->stFileHandle.dwFileSize = stEntry.dwFileSize;
+    pstFile->stFileHandle.dwStartClusterIndex = stEntry.dwStartClusterIndex;
+    pstFile->stFileHandle.dwCurrentClusterIndex = stEntry.dwStartClusterIndex;
+    pstFile->stFileHandle.dwPreviousClusterIndex = stEntry.dwStartClusterIndex;
+    pstFile->stFileHandle.dwCurrentOffset = 0;
+    
+    if(pcMode[0] == 'a') kSeekFile(pstFile, 0, FILESYSTEM_SEEK_END);
+    // Sync.
+    kUnlock(&(gs_stFileSystemManager.stMutex));
+    return pstFile;
+}
+// Read File & Copy to Buffer
+DWORD kReadFile(void* pvBuffer, DWORD dwSize, DWORD dwCount, FILE* pstFile) {
+    DWORD dwTotalCount;
+    DWORD dwReadCount;
+    DWORD dwOffsetInCluster;
+    DWORD dwCopySize;
+    FILEHANDLE* pstFileHandle;
+    DWORD dwNextClusterIndex;
+
+    if((pstFile == NULL) || (pstFile->bType != FILESYSTEM_TYPE_FILE)) return 0;
+    pstFileHandle = &(pstFile->stFileHandle);
+    // Exit if it is End of File or Last Cluster
+    if((pstFileHandle->dwCurrentOffset == pstFileHandle->dwFileSize) || (pstFileHandle->dwCurrentClusterIndex == FILESYSTEM_LASTCLUSTER)) return 0;
+    dwTotalCount = MIN(dwSize * dwCount, pstFileHandle->dwFileSize - pstFileHandle->dwCurrentOffset);
+    // Sync.
+    kLock(&(gs_stFileSystemManager.stMutex));
+    // Repeat Until Calculated Value is read out
+    dwReadCount = 0;
+    while(dwReadCount != dwTotalCount) {
+        //================================
+        // Read Cluster and Copy to Buffer
+        //================================
+        if(kReadCluster(pstFileHandle->dwCurrentClusterIndex, gs_vbTempBuffer) == FALSE) break;
+        dwOffsetInCluster = pstFileHandle->dwCurrentClusterIndex % FILESYSTEM_CLUSTERSIZE;
+        dwCopySize = MIN(FILESYSTEM_CLUSTERSIZE - dwOffsetInCluster, dwTotalCount - dwReadCount);
+        kmemCpy((char*) pvBuffer + dwReadCount, gs_vbTempBuffer + dwOffsetInCluster, dwCopySize);
+        dwReadCount += dwCopySize;
+        pstFileHandle->dwCurrentOffset += dwCopySize;
+
+        //======================================================================
+        // Once you have finished reading current Cluster, move to next Cluster.
+        //======================================================================
+        if((pstFileHandle->dwCurrentOffset % FILESYSTEM_CLUSTERSIZE) == 0) {
+            if(kGetClusterLinkData(pstFileHandle->dwCurrentClusterIndex, &dwNextClusterIndex) == FALSE) break;
+            pstFileHandle->dwPreviousClusterIndex = pstFileHandle->dwCurrentClusterIndex;
+            pstFileHandle->dwCurrentClusterIndex = dwNextClusterIndex;
+        }
+    }
+    // Sync.
+    kUnlock(&(gs_stFileSystemManager.stMutex));
+    // Return Read Byte Count
+    return dwReadCount;
+}
+// Renew Directory Entry Value from Root Directory
+static BOOL kUpdateDirectoryEntry(FILEHANDLE* pstFileHandle) {
+    DIRECTORYENTRY stEntry;
+    // Seatch Directory Entry
+    if((pstFileHandle == NULL) || (kGetDirectoryEntryData(pstFileHandle->iDirectoryEntryOffset, &stEntry) == FALSE)) return FALSE;
+    // Change File Size & Start Cluster
+    stEntry.dwFileSize = pstFileHandle->dwFileSize;
+    stEntry.dwStartClusterIndex = pstFileHandle->dwStartClusterIndex;
+    // Set Changed Directory Entry
+    if(kSetDirectoryEntryData(pstFileHandle->iDirectoryEntryOffset, &stEntry) == FALSE) return FALSE;
+    return TRUE;
+} 
+// Read Buffer Data at File
+DWORD kWriteFile(const void* pvBuffer, DWORD dwSize, DWORD dwCount, FILE* pstFile) {
+    DWORD dwWriteCount;
+    DWORD dwTotalCount;
+    DWORD dwOffsetInCluster;
+    DWORD dwCopySize;
+    DWORD dwAllocatedClusterIndex;
+    DWORD dwNextClusterIndex;
+    FILEHANDLE* pstFileHandle;
+
+    // If Handle is not a File Type, it fails.
+    if((pstFile == NULL) || (pstFile->bType != FILESYSTEM_TYPE_FILE)) return 0;
+    pstFileHandle = &(pstFile->stFileHandle);
+    // Total Byte
+    dwTotalCount = dwSize * dwCount;
+    // Sync.
+    kLock(&(gs_stFileSystemManager.stMutex));
+    // Repeat Until Done
+    dwWriteCount = 0;
+    while(dwWriteCount != dwTotalCount) {
+        //===============================================================
+        // If Current Cluster is end of a file, Assign and Attach Cluster
+        //===============================================================
+        if(pstFileHandle->dwCurrentClusterIndex == FILESYSTEM_LASTCLUSTER) {
+            // Search Empty Cluster
+            dwAllocatedClusterIndex = kFindFreeCluster();
+            if(dwAllocatedClusterIndex == FILESYSTEM_LASTCLUSTER) break;
+            // Set discovered Cluster to Last Cluster
+            if(kSetClusterLinkData(dwAllocatedClusterIndex, FILESYSTEM_LASTCLUSTER) == FALSE) break;
+            // Connect Allocated Cluster to File Last Cluster
+            if(kSetClusterLinkData(pstFileHandle->dwPreviousClusterIndex, dwAllocatedClusterIndex) == FALSE) {
+                kSetClusterLinkData(dwAllocatedClusterIndex, FILESYSTEM_FREECLUSTER);
+                break;
+            }
+            // Change Current Cluster is Allocated
+            pstFileHandle->dwCurrentClusterIndex = dwAllocatedClusterIndex;
+            kMemSet(gs_vbTempBuffer, 0, FILESYSTEM_LASTCLUSTER);
+        }
+        //====================================================================================
+        // If Cluster fails to Fill up, Read Cluster and Copy it to Temporary Cluster Buffer
+        //====================================================================================
+        else if(((pstFileHandle->dwCurrentOffset % FILESYSTEM_CLUSTERSIZE) != 0) || ((dwTotalCount - dwWriteCount) < FILESYSTEM_CLUSTERSIZE)) {
+            if(kReadCluster(pstFileHandle->dwCurrentClusterIndex, gs_vbTempBuffer) == FALSE) break;
+        }
+        dwOffsetInCluster = pstFileHandle->dwCurrentOffset % FILESYSTEM_CLUSTERSIZE;
+        dwCopySize = MIN(FILESYSTEM_CLUSTERSIZE - dwOffsetInCluster, dwTotalCount - dwWriteCount);
+        kMemCpy(gs_vbTempBuffer + dwOffsetInCluster, (char*)pvBuffer + dwWriteCount, dwCopySize);
+        if(kWriteCluster(pstFileHandle->dwCurrentClusterIndex, gs_vbTempBuffer) == FALSE) break;
+        // Renew File Point Location & Wrote Byte
+        dwWriteCount += dwCopySize;
+        pstFileHandle->dwCurrentOffset += dwCopySize;
+        //==================================================
+        // Move Next Cluster if Current Cluster is Filled up
+        //==================================================
+        if((pstFileHandle->dwCurrentOffset % FILESYSTEM_CLUSTERSIZE) == 0) {
+            if(kGetClulsterLinkData(pstFileHandle->dwCurrentClusterIndex, &dwNextClusterIndex) == FALSE) break;
+            // Renew Cluster Info.
+            pstFileHandle->dwPreviousClusterIndex = pstFileHandle->dwCurrentClusterIndex;
+            pstFileHandle->dwCurrentClusterIndex = dwNextClusterIndex;
+        }
+    }
+    //========================================================================
+    // If File Size changed, Renew Directory Entry Info friom Root Directory
+    //========================================================================
+    if(pstFileHandle->dwFileSize < pstFileHandle->dwCurrentOffset) {
+        pstFileHandle->dwFileSize = pstFileHandle->dwCurrentOffset;
+        kUpdateDirectoryEntry(pstFileHandle);
+    }
+    // Sync.
+    kUnlock(&(gs_stFileSystemManager.stMutex));
+    return dwWriteCount;
+}
+// Fill File with 0 by Count
+BOOL kWriteZero(FILE* pstFile, DWORD dwCount) {
+    BYTE* pbBuffer;
+    DWORD dwRemainCount;
+    DWORD dwWriteCount;
+    // If Handle is NULL, if fails
+    if(pstFile == NULL) return FALSE;
+    
+    pbBuffer = (BYTE*) kAllocateMemory(FILESYSTEM_CLUSTERSIZE);
+    if(pbBuffer == NULL) return FALSE;
+    // Fill with 0
+    kMemSet(pbBuffer, 0, FILESYSTEM_CLUSTERSIZE);
+    dwRemainCount = dwCount;
+
+    while(dwRemainCount != 0) {
+        dwWriteCount = MIN(dwRemainCount, FILESYSTEM_CLUSTERSIZE);
+        if(kWriteFile(pbBuffer, 1, dwWriteCount, pstFile) != dwWriteCount) {
+            kFreeMemory(pbBuffer);
+            return FALSE;
+        }
+        dwRemainCount -= dwWriteCount;
+    }
+    kFreeMemory(pbBuffer);
+    return TRUE;
 }

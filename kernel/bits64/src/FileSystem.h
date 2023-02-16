@@ -21,9 +21,9 @@
 #define FILESYSTEM_TYPE_DIRECTORY   2
 
 // Definition Seek option   // 26 chapter
-#define FILESYSEM_SEEK_SET          0
-#define FILESYSEM_SEEK_CUR          1
-#define FILESYSEM_SEEK_END          2
+#define FILESYSTEM_SEEK_SET          0
+#define FILESYSTEM_SEEK_CUR          1
+#define FILESYSTEM_SEEK_END          2
 
 // HardDisk Controll Related Function Pointer Type
 typedef BOOL(* fReadHDDInformation) (BOOL bPrimary, BOOL bMaster, HDDINFORMATION* pstHDDInformation);
@@ -92,7 +92,7 @@ typedef struct kFileHandleStruct {
     DWORD dwFileSize;               // file size
     DWORD dwStartClusterIndex;      // file start cluster index
     DWORD dwCurrentClusterIndex;    // progress cluster index
-    DWORD dwPreviousClusterIndex    // before cluster index
+    DWORD dwPreviousClusterIndex;    // before cluster index
     DWORD dwCurrentOffset;          // file pointer location
 } FILEHANDLE;
 

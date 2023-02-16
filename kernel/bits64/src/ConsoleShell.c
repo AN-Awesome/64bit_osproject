@@ -1073,13 +1073,11 @@ static void kShowRootDirectory(const char* pcParameterBuffer) {
         else dwUsedClusterCount += (pstEntry->dwFileSize + (FILESYSTEM_CLUSTERSIZE - 1) / FILESYSTEM_CLUSTERSIZE);   
     }
 
-    kPrintf("TEST----");
-
     rewinddir(pstDirectory);
     iCount = 0;
     while(1) {
         pstEntry = readdir(pstDirectory);
-        if(pstEntry = NULL) break;
+        if(pstEntry == NULL) break;
 
         kMemSet(vcBuffer, ' ', sizeof(vcBuffer) - 1);
         vcBuffer[sizeof(vcBuffer) - 1] = '\0';

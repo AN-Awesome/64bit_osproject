@@ -1092,7 +1092,7 @@ static void kShowRootDirectory(const char* pcParameterBuffer) {
         // add start cluster of file
         kSPrintf(vcTempValue, "0x%X Cluster", pstEntry->dwStartClusterIndex);
         kMemCpy(vcBuffer + 55, vcTempValue, kStrLen(vcTempValue));
-        kPrintf("    %s\n", vcBuffer);
+        kPrintf(" %s\n", vcBuffer);
 
         if((iCount != 0) && ((iCount % 20) == 0)) {
             kPrintf("Press an key to continue... ('q' is exit) : ");

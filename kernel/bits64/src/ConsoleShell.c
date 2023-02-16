@@ -1029,7 +1029,7 @@ static void kCreateFileInRootDirectory(const char* pcParameterBuffer) {
         kSetClusterLinkData(dwCluster, FILESYSTEM_FREECLUSTER);
         kPrintf("Directory Entry Set Fail\n");
     }
-    kPrintf("File Create Success\n");
+    kPrintf(" %s File Create Success\n", stEntry.vcFileName);
 }
 
 // Delete files from root directory

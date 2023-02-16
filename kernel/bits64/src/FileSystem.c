@@ -139,7 +139,7 @@ BOOL kReadCluster(DWORD dwOffset, BYTE *pbBuffer) {
 }
 
 BOOL kWriteCluster(DWORD dwOffset, BYTE* pbBuffer) {
-    return gs_pfReadHDDSector(TRUE, TRUE, (dwOffset * FILESYSTEM_SECTORSPERCLUSTER) + gs_stFileSystemManager.dwDataAreaStartAddress, FILESYSTEM_SECTORSPERCLUSTER, pbBuffer);
+    return gs_pfWriteHDDSector(TRUE, TRUE, (dwOffset * FILESYSTEM_SECTORSPERCLUSTER) + gs_stFileSystemManager.dwDataAreaStartAddress, FILESYSTEM_SECTORSPERCLUSTER, pbBuffer);
 }
 
 DWORD kFindFreeCluster(void) {

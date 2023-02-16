@@ -31,7 +31,7 @@ BOOL kInitializeFileSystem(void) {
         return FALSE;
     }
     // Handle Pool Init to 0
-    kMemset(gs_stFileSystemManager.pstHandlePool, 0, FILESYSTEM_HANDLE_MAXCOUNT * sizeof(FILE));
+    kMemSet(gs_stFileSystemManager.pstHandlePool, 0, FILESYSTEM_HANDLE_MAXCOUNT * sizeof(FILE));
     return TRUE;
 }
 
@@ -197,7 +197,7 @@ static BOOL kSetClusterLinkData(DWORD dwClusterIndex, DWORD dwData) {
     return TRUE;
 }
 
-static BOOL kGetClulsterLinkData(DWORD dwClusterIndex, DWORD* pdwData) {
+static BOOL kGetClusterLinkData(DWORD dwClusterIndex, DWORD* pdwData) {
     DWORD dwSectorOffset;
 
     if(gs_stFileSystemManager.bMounted == FALSE) return FALSE;
@@ -330,7 +330,7 @@ static BOOL kFreeClusterUntilEnd(DWORD dwClusterIndex) {
     
     while(dwCurrentClusterIndex != FILESYSTEM_LASTCLUSTER) {
         // Get Next Cluster's Index
-        if(kGetClulsterLinkData(dwCurrentClusterIndex, &dwNextClusterIndex) == FALSE) return FALSE;
+        if(kGetClusterLinkData(dwCurrentClusterIndex, &dwNextClusterIndex) == FALSE) return FALSE;
         // Disable by Setting Current Cluster Empty
         if(kSetClusterLinkData(dwCurrentClusterIndex, FILESYSTEM_FREECLUSTER) == FALSE) return FALSE;
         // Current Cluster's Index changes to Next Cluster's Index
@@ -348,7 +348,7 @@ FILE* kOpenFile(const char* pcFileName, const char* pcMode) {
 
     // Verify File Name
     iFileNameLength = kStrLen(pcFileName);
-    if((iFileNameLength >(sizof(stEntry.vcFileName) - 1)) || (iFileNameLength == 0)) return NULL;
+    if((iFileNameLength >(sizeof(stEntry.vcFileName) - 1)) || (iFileNameLength == 0)) return NULL;
     // Sync.
     kLock(&(gs_stFileSystemManager.stMutex));
     //================================================================
@@ -446,7 +446,7 @@ DWORD kReadFile(void* pvBuffer, DWORD dwSize, DWORD dwCount, FILE* pstFile) {
         if(kReadCluster(pstFileHandle->dwCurrentClusterIndex, gs_vbTempBuffer) == FALSE) break;
         dwOffsetInCluster = pstFileHandle->dwCurrentClusterIndex % FILESYSTEM_CLUSTERSIZE;
         dwCopySize = MIN(FILESYSTEM_CLUSTERSIZE - dwOffsetInCluster, dwTotalCount - dwReadCount);
-        kmemCpy((char*) pvBuffer + dwReadCount, gs_vbTempBuffer + dwOffsetInCluster, dwCopySize);
+        kMemCpy((char*) pvBuffer + dwReadCount, gs_vbTempBuffer + dwOffsetInCluster, dwCopySize);
         dwReadCount += dwCopySize;
         pstFileHandle->dwCurrentOffset += dwCopySize;
 
@@ -531,7 +531,7 @@ DWORD kWriteFile(const void* pvBuffer, DWORD dwSize, DWORD dwCount, FILE* pstFil
         // Move Next Cluster if Current Cluster is Filled up
         //==================================================
         if((pstFileHandle->dwCurrentOffset % FILESYSTEM_CLUSTERSIZE) == 0) {
-            if(kGetClulsterLinkData(pstFileHandle->dwCurrentClusterIndex, &dwNextClusterIndex) == FALSE) break;
+            if(kGetClusterLinkData(pstFileHandle->dwCurrentClusterIndex, &dwNextClusterIndex) == FALSE) break;
             // Renew Cluster Info.
             pstFileHandle->dwPreviousClusterIndex = pstFileHandle->dwCurrentClusterIndex;
             pstFileHandle->dwCurrentClusterIndex = dwNextClusterIndex;
@@ -700,7 +700,7 @@ int kRemoveFile(const char* pcFileName) {
 
     // Check file name
     iFileNameLength = kStrLen(pcFileName);
-    if((iFileNameLength > (sizeof(stEntry.vcFileName) - 1)) || (iFileNameLength == 0)) return NULL;
+    if((iFileNameLength > (sizeof(stEntry.vcFileName) - 1)) || (iFileNameLength == 0)) return -1;
 
     // sync
     kLock( &(gs_stFileSystemManager.stMutex));
@@ -751,7 +751,7 @@ DIR* kOpenDirectory(const char* pcDirectoryName) {
     // ignore directory name
     // allocate hande and return
     pstDirectory = kAllocateFileDirectoryHandle();
-    if(pstDirectory == NULL) {
+    if(pstDirectoryBuffer == NULL) {
         // sync
         kUnlock( &(gs_stFileSystemManager.stMutex));
         return NULL;

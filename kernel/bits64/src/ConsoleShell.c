@@ -1045,12 +1045,12 @@ static void kShowRootDirectory(const char* pcParameterBuffer) {
     DIR *pstDirectory;
     BYTE* pbClusterBuffer;
     int i, iCount;
-    int iTotalCount = 0;
+    int iTotalCount;
     struct dirent* pstEntry;
     char vcBuffer[400];
     char vcTempValue[50];
-    DWORD dwTotalByte = 0;
-    DWORD dwUsedClusterCount = 0;
+    DWORD dwTotalByte;
+    DWORD dwUsedClusterCount;
     FILESYSTEMMANAGER stManager;
 
     kGetFileSystemInformation(&stManager);
@@ -1061,6 +1061,9 @@ static void kShowRootDirectory(const char* pcParameterBuffer) {
         return;
     }
 
+    iTotalCount = 0;
+    dwTotalByte = 0;
+    dwUsedClusterCount = 0;
     while(1) {
         pstEntry = readdir(pstDirectory);
         if(pstEntry == NULL) break;
@@ -1200,7 +1203,7 @@ static void kReadDataFromFile(const char* pcParameterBuffer) {
 }
 
 static void kTestFileIO(const char* pcParameterBuffer) {
-    FILE *pstfile;
+    FILE *pstFile;
     BYTE *pbBuffer;
     int i, j;
     DWORD dwRandomOffset;
@@ -1270,7 +1273,7 @@ static void kTestFileIO(const char* pcParameterBuffer) {
     if(i >= 100) kPrintf("Pass\n");
 
     // random write test
-    kprintf("5. Random Write Test...\n");
+    kPrintf("5. Random Write Test...\n");
 
     kMemSet(pbBuffer, 0, dwMaxFileSize);
     fseek(pstFile, -100 * FILESYSTEM_CLUSTERSIZE, SEEK_CUR);
@@ -1282,7 +1285,7 @@ static void kTestFileIO(const char* pcParameterBuffer) {
 
         kPrintf("    [%d] Offset [%d] Byte [%d]...", i, dwRandomOffset, dwByteCount);
         fseek(pstFile, dwRandomOffset, SEEK_SET);
-        kMemSEt(vbTempBuffer, i, dwByteCount);
+        kMemSet(vbTempBuffer, i, dwByteCount);
 
         if(fwrite(vbTempBuffer, 1, dwByteCount, pstFile) != dwByteCount) {
             kPrintf("Fail\n");
@@ -1313,10 +1316,10 @@ static void kTestFileIO(const char* pcParameterBuffer) {
         // compare with buffer
         if(kMemCmp(pbBuffer + dwRandomOffset, vbTempBuffer, dwByteCount) != 0) {
             kPrintf("Fail\n");
-            kPrint("    Compare Fail\n", dwRandomOffset);
+            kPrintf("    Compare Fail\n", dwRandomOffset);
             break;
         }
-        kPrint("Pass\n");
+        kPrintf("Pass\n");
     }
     
     // re-sequential read test
@@ -1352,7 +1355,7 @@ static void kTestFileIO(const char* pcParameterBuffer) {
 
     // File Close Test
     kPrintf("9. File Close Test...");
-    if(fclose(pstfile) == 0) kPrintf("Pass\n");
+    if(fclose(pstFile) == 0) kPrintf("Pass\n");
     else kPrintf("Fail\n");
 
     // File Delete Test

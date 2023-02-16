@@ -133,19 +133,6 @@ BOOL kFormat(void);
 BOOL kMount(void);
 BOOL kGetHDDInformation(HDDINFORMATION* pstInformation);
 
-BOOL kReadClusterLinkTable(DWORD dwOffset, BYTE* pbBuffer);
-BOOL kWriteClusterLinkTable(DWORD dwOffset, BYTE* pbBuffer);
-BOOL kReadCluster(DWORD dwOffset, BYTE* pbBuffer);
-BOOL kWriteCluster(DWORD dwOffset, BYTE* pbBuffer);
-DWORD kFindFreeCluster(void);
-BOOL kSetClusterLinkData(DWORD dwClusterIndex, DWORD dwData);
-BOOL kGetClusterLinkData(DWORD dwClusterIndex, DWORD* pdwData);
-int kFindFreeDirectoryEntry(void);
-BOOL kSetDirectoryEntryData(int iIndex, DIRECTORYENTRY* pstEntry);
-BOOL kGetDirectoryEntryData(int iIndex, DIRECTORYENTRY* pstEntry);
-int kFindDirectoryEntry(const char* pcFileName, DIRECTORYENTRY* pstEntry);
-void kGetFileSystemInformation(FILESYSTEMMANAGER* pstManager);
-
 // Low Level Function // 26 chapter
 static BOOL kReadClusterLinkTable(DWORD dwOffset, BYTE* pbBuffer);
 static BOOL kWriteClusterLinkTable(DWORD dwOffset, BYTE* pbBuffer);

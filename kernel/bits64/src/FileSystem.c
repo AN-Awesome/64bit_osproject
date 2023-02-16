@@ -512,7 +512,8 @@ DWORD kWriteFile(const void* pvBuffer, DWORD dwSize, DWORD dwCount, FILE* pstFil
             }
             // Change Current Cluster is Allocated
             pstFileHandle->dwCurrentClusterIndex = dwAllocatedClusterIndex;
-            kMemSet(gs_vbTempBuffer, 0, FILESYSTEM_LASTCLUSTER);
+            // kMemSet(gs_vbTempBuffer, 0, FILESYSTEM_LASTCLUSTER);
+            kMemSet(gs_vbTempBuffer, 0, sizeof(gs_vbTempBuffer));
         }
         //====================================================================================
         // If Cluster fails to Fill up, Read Cluster and Copy it to Temporary Cluster Buffer
@@ -746,7 +747,7 @@ DIR* kOpenDirectory(const char* pcDirectoryName) {
     DIRECTORYENTRY* pstDirectoryBuffer;
 
     // sync
-    kLock( &(gs_stFileSystemManager.stMutex));
+    kLock(&(gs_stFileSystemManager.stMutex));
 
     // ignore directory name
     // allocate hande and return

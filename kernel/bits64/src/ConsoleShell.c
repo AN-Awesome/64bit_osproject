@@ -996,8 +996,8 @@ static void kCreateFileInRootDirectory(const char* pcParameterBuffer) {
     int i;
 
     // Init parameter list -> extract filename
-    kInitializeParameter( &stList, pcParameterBuffer);
-    iLength = kGetNextParameter( &stList, vcFileName);
+    kInitializeParameter(&stList, pcParameterBuffer);
+    iLength = kGetNextParameter(&stList, vcFileName);
     vcFileName[iLength] = '\0';
     if((iLength > (sizeof(stEntry.vcFileName) - 1)) || (iLength == 0)) {
         kPrintf("Too Long or Too Short File Name\n");
@@ -1041,8 +1041,8 @@ static void kDeleteFileInRootDirectory(const char* pcParameterBuffer) {
     int iOffset;
 
     // Init parameter list -> extract filename
-    kInitializeParameter( &stList, pcParameterBuffer);
-    iLength = kGetNextParameter( &stList, vcFileName);
+    kInitializeParameter(&stList, pcParameterBuffer);
+    iLength = kGetNextParameter(&stList, vcFileName);
     vcFileName[iLength] = '\0';
 
     if((iLength > (sizeof(stEntry.vcFileName) - 1)) || (iLength == 0)) {
@@ -1076,7 +1076,7 @@ static void kDeleteFileInRootDirectory(const char* pcParameterBuffer) {
 
 // Display Root Directory file list
 static void kShowRootDirectory(const char* pcParameterBuffer) {
-    BYTE pbClusterBuffer;
+    BYTE* pbClusterBuffer;
     int i, iCount, iTotalCount;
     DIRECTORYENTRY* pstEntry;
     char vcBuffer[400];

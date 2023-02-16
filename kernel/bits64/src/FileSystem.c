@@ -1,6 +1,8 @@
 #include "FileSystem.h"
 #include "HardDisk.h"
 #include "DynamicMemory.h"
+#include "Task.h"
+#include "Utility.h"
 
 static FILESYSTEMMANAGER gs_stFileSystemManager;
 static BYTE gs_vbTempBuffer[FILESYSTEM_SECTORSPERCLUSTER * 512];
@@ -21,6 +23,15 @@ BOOL kInitializeFileSystem(void) {
 
     // Connect File System
     if(kMount() == FALSE) return FALSE;
+    // Allocate Space for Handle
+    gs_stFileSystemManager.pstHandlePool = (FILE*)kAllocateMemory(FILESYSTEM_HANDLE_MAXCOUNT * sizeof(FILE));
+    // Set HardDisk as Unrecognized if Memory Allocation Fail
+    if(gs_stFileSystemManager.pstHandPool == NULL) {
+        gs_stFileSystemManager.bMounted = FALSE;
+        return FALSE;
+    }
+    // Handle Pool Init to 0
+    kMemset(gs_stFileSystemManager.pstHandlePool, 0, FILESYSTEM_HANDLE_MAXCOUNT * sizeof(FILE));
     return TRUE;
 }
 
@@ -126,23 +137,23 @@ BOOL kGetHDDInformation(HDDINFORMATION* pstInformation) {
     return bResult;
 }
 
-BOOL kReadClusterLinkTable(DWORD dwOffset, BYTE* pbBuffer) {
+static BOOL kReadClusterLinkTable(DWORD dwOffset, BYTE* pbBuffer) {
     return gs_pfReadHDDSector(TRUE, TRUE, dwOffset + gs_stFileSystemManager.dwClusterLinkAreaStartAddress, 1, pbBuffer);
 }
 
-BOOL kWriteClusterLinkTable(DWORD dwOffset, BYTE *pbBuffer) {
+static BOOL kWriteClusterLinkTable(DWORD dwOffset, BYTE *pbBuffer) {
     return gs_pfWriteHDDSector(TRUE, TRUE, dwOffset + gs_stFileSystemManager.dwClusterLinkAreaStartAddress, 1, pbBuffer);
 }
 
-BOOL kReadCluster(DWORD dwOffset, BYTE *pbBuffer) {
+static BOOL kReadCluster(DWORD dwOffset, BYTE *pbBuffer) {
     return gs_pfReadHDDSector(TRUE, TRUE, (dwOffset * FILESYSTEM_SECTORSPERCLUSTER) + gs_stFileSystemManager.dwDataAreaStartAddress, FILESYSTEM_SECTORSPERCLUSTER, pbBuffer);
 }
 
-BOOL kWriteCluster(DWORD dwOffset, BYTE* pbBuffer) {
+static BOOL kWriteCluster(DWORD dwOffset, BYTE* pbBuffer) {
     return gs_pfWriteHDDSector(TRUE, TRUE, (dwOffset * FILESYSTEM_SECTORSPERCLUSTER) + gs_stFileSystemManager.dwDataAreaStartAddress, FILESYSTEM_SECTORSPERCLUSTER, pbBuffer);
 }
 
-DWORD kFindFreeCluster(void) {
+static DWORD kFindFreeCluster(void) {
     DWORD dwLinkCountInSector;
     DWORD dwLastSectorOffset, dwCurrentSectorOffset;
     DWORD i, j;
@@ -171,7 +182,7 @@ DWORD kFindFreeCluster(void) {
     return FILESYSTEM_LASTCLUSTER;
 }
 
-BOOL kSetClusterLinkData(DWORD dwClusterIndex, DWORD dwData) {
+static BOOL kSetClusterLinkData(DWORD dwClusterIndex, DWORD dwData) {
     DWORD dwSectorOffset;
 
     if(gs_stFileSystemManager.bMounted == FALSE) return FALSE;
@@ -186,7 +197,7 @@ BOOL kSetClusterLinkData(DWORD dwClusterIndex, DWORD dwData) {
     return TRUE;
 }
 
-BOOL kGetClulsterLinkData(DWORD dwClusterIndex, DWORD* pdwData) {
+static BOOL kGetClulsterLinkData(DWORD dwClusterIndex, DWORD* pdwData) {
     DWORD dwSectorOffset;
 
     if(gs_stFileSystemManager.bMounted == FALSE) return FALSE;
@@ -200,7 +211,7 @@ BOOL kGetClulsterLinkData(DWORD dwClusterIndex, DWORD* pdwData) {
     return TRUE;
 }
 
-int kFindFreeDirectoryEntry(void) {
+static int kFindFreeDirectoryEntry(void) {
     DIRECTORYENTRY* pstEntry;
     int i;
 
@@ -215,7 +226,7 @@ int kFindFreeDirectoryEntry(void) {
     return -1;
 }
 
-BOOL kSetDirectoryEntryData(int iIndex, DIRECTORYENTRY *pstEntry) {
+static BOOL kSetDirectoryEntryData(int iIndex, DIRECTORYENTRY *pstEntry) {
     DIRECTORYENTRY *pstRootEntry;
     if((gs_stFileSystemManager.bMounted == FALSE) || (iIndex < 0) || (iIndex >=FILESYSTEM_MAXDIRECTORYENTRYCOUNT)) return FALSE;
     if(kReadCluster(0, gs_vbTempBuffer) == FALSE) return FALSE;
@@ -226,7 +237,7 @@ BOOL kSetDirectoryEntryData(int iIndex, DIRECTORYENTRY *pstEntry) {
     return TRUE;
 }
 
-BOOL kGetDirectoryEntryData(int iIndex, DIRECTORYENTRY *pstEntry) {
+static BOOL kGetDirectoryEntryData(int iIndex, DIRECTORYENTRY *pstEntry) {
     DIRECTORYENTRY *pstRootEntry;
     if((gs_stFileSystemManager.bMounted == FALSE) || (iIndex < 0) || (iIndex >= FILESYSTEM_MAXDIRECTORYENTRYCOUNT)) return FALSE;
 
@@ -237,7 +248,7 @@ BOOL kGetDirectoryEntryData(int iIndex, DIRECTORYENTRY *pstEntry) {
     return TRUE;
 }
 
-int kFindDirectoryEntry(const char* pcFileName, DIRECTORYENTRY *pstEntry) {
+static int kFindDirectoryEntry(const char* pcFileName, DIRECTORYENTRY *pstEntry) {
     DIRECTORYENTRY *pstRootEntry;
     int i, iLength;
 
@@ -259,4 +270,105 @@ int kFindDirectoryEntry(const char* pcFileName, DIRECTORYENTRY *pstEntry) {
 void kGetFileSystemInformation(FILESYSTEMMANAGER *pstManager) {
     kMemCpy(pstManager, &gs_stFileSystemManager, sizeof(gs_stFileSystemManager));
 }
+//======================
+// High Level Function
+//======================
+static void* kAllocateFileDirectoryHandle(void) {
+    int i;
+    FILE* pstFile;
+    // Search All Handle Pool & Return Empty Handle 
+    pstFile = gs_stFileSystemManager.pstHandlePool;
+    for(i = 0; i < FILESYSTEM_HANDLE_MAXCOUNT; i++) {
+        // Return if Empty
+        if(pstFile->bType == FILESYSTEM_TYPE_FREE) {
+            pstFile ->bType == FILESYSTEM_TYPE_FILE;
+            return pstFile;
+        }
+        // Move Next
+        pstFile++;
+    }
+    return NULL;
+}
+// Return Used Handle
+static void kFreeFileDirectoryHandle(FILE* pstFile) {
+    // Init All area
+    kMemSet(pstFile, 0, sizeof(FILE));
+    // Set Empty Type
+    pstFile->bType = FILESYSTEM_TYPE_FREE;
+}
+// Make File
+static BOOL kCreateFile(cosnt char* pcFileName, DIRECTORYENTRY* pstEntry, int* piDirectoryEntryIndex) {
+    DWORD dwCluster;
+    // Find Empty Cluster and Set Allocated
+    dwCluster = kFindFreeCluster();
+    if((dwCluster == FILESYSTEM_LASTCLUSTER) || (kSeetClusterLinkData(dwCluster, FILESYSTEM_LASTCLUSTER) == FALSE)) return FALSE;
+    // Search Empty Directory Entry
+    *piDirectoryEntryIndex = kFindFreeDirectoryEntry();
+    if(*piDirectoryEntryIndex == -1) {
+        // Return Allocated Cluster if it Fails
+        kSetClusterLinkData(dwCluster, FILESYSTEM_FREECLUSTER);
+        return FALSE;
+    }
+    // Set Directory Entry
+    kMemCpy(pstEntry->vcFileName, pcFileName, kStrLen(pcFileName) +1);
+    pstEntry->dwStartClusterIndex = dwCluster;
+    pstEntry->dwFileSize = 0;
+    // Register Directory Entry
+    if(kSetDirectoryEntryData(*piDirectoryEntryIndex, pstEntry) == FALSE) {
+        // Return Allocated Cluster if it Fails
+        kSetClusterLinkData(dwCluster, FILESYSTEM_FREECLUSTER);
+        return FALSE;
+    }
+    return TRUE;
+}
+// Return All Connected Cluster from Passed to Parameter to the end of File
+static BOOL kFreeClusterUntilEnd(DWORD dwClusterIndex) {
+    DWORD dwCurrentClusterIndex;
+    DWORD dwNextClusterIndex;
+    // Cluster Index Init
+    dwCurrentClusterIndex = dwClusterIndex;
+    
+    while(dwCurrentClusterIndex != FILESYSTEM_LASTCLUSTER) {
+        // Get Next Cluster's Index
+        if(kGetClulsterLinkData(dwCurrentClusterIndex, &dwNextClusterIndex) == FALSE) return FALSE;
+        // Disable by Setting Current Cluster Empty
+        if(kSetClusterLinkData(dwCurrentClusterIndex, FILESYSTEM_FREECLUSTER) == FALSE) return FALSE;
+        // Current Cluster's Index changes to Next Cluster's Index
+        dwCurrentClusterIndex = dwNextClusterIndex;
+    }
+    return TRUE;
+}
+// Create or Open File
+FILE* kOpenFile(const char* pcFileName, const char* pcMode) {
+    DIRECTORYENTRY stEntry;
+    int iDirectoryEntryOffset;
+    int iFileNameLength;
+    DWORD dwSecondCluster;
+    FILE* pstFile;
 
+    // Verify File Name
+    iFileNameLength = kStrLen(pcFileName);
+    if((iFileNameLength >(sizof(stEntry.vcFileName) - 1)) || (iFileNameLength == 0)) return NULL;
+    // Sync.
+    kLock(&(gs_stFileSystemManager.stMutex));
+    //================================================================
+    // Verify the File Exists; if not, check Options and Create File
+    //================================================================
+    iDirectoryEntryOffset = kFindDirectoryEntry(pcFileName, &stEntry);
+    if(iDirectoryEntryOffset == -1) {
+        // If not exists, Read Option Failed
+        if(pcMode[0] == 'r') {
+            // Sync.
+            kUnlock(&(gs_stFileSystemManager.stMutex));
+            return NULL;
+        }
+        // Rest Options create File
+        if(kCreateFile(pcFileName, &stEntry, &iDirectoryEntryOffset) == FALSE) {
+            // Sync.
+            kUnlock(&(gs_stFileSystemManager.stMutex));
+            return NULL;
+        }
+    }
+    //=================================================
+    // If Option to empty contents of File, remove all clusters attached to the file and set the file size to zero
+}

@@ -8,6 +8,7 @@ _tools_:
 
 Disk.img: build/boot.bin build/kernel32.bin build/kernel64.bin
 	./tools/ImageMaker/ImageMaker $^
+	qemu-img create HDD.img 20M
 	sudo chmod 755 Disk.img
 
 test:
@@ -20,6 +21,7 @@ clean:
 
 	rm -f build/*.*
 	rm -f Disk.img
+	rm -f HDD.img
 	rm -f ImageMaker
 
 	rm -f kernel/bits32/data/*.o

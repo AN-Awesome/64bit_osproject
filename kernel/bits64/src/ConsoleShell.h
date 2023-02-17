@@ -83,4 +83,7 @@ static void kWriteDataToFile(const char* pcParameterBuffer);
 static void kReadDataFromFile(const char* pcParameterBuffer);
 static void kTestFileIO(const char* pcParameterBuffer);
 
+static void kFlushCache(const char* pcParameterBuffer); // 27 chapter
+static void kTestPerformance(const char* pcParameterBuffer);
+
 #endif

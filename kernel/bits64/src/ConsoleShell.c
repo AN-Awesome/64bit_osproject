@@ -49,7 +49,9 @@ SHELLCOMMANDENTRY gs_vstCommandTable[] = {
     {"dir", "Show Directory", kShowRootDirectory},
     {"writefile", "Write Data To File, ex)writefile a.txt", kWriteDataToFile},
     {"readfile", "Read Data From File, ex)readfile a.txt", kReadDataFromFile},
-    {"testfileio", "Test File I/O Function", kTestFileIO}
+    {"testfileio", "Test File I/O Function", kTestFileIO},
+    {"testperformance", "Test File Read/WritePerformance", kTestPerformance}, //27chapter
+    {"flush", "Flush File System Cache", kFlushCache}, //27chapter
 };
 
 // generate random numbers Variable
@@ -312,6 +314,12 @@ static void kStringToDecimalHexTest(const char* pcParameterBuffer) {
 static void kShutdown(const char* pcParameterBuffer) {
     kSetColor(SKY_BR);
     kPrintf("\n System Shutdown Start...\n");
+
+    //27chapter
+    kPrintf("Cache Flush...");
+    if(kFlushFileSystemCache() == TRUE) kPrintf("Pass\n");
+    else kPrintf("Fail\n");
+    //
 
     // Restart PC via Keyboard Controller
     kPrintf(" Press Any Key To Reboot PC...");
@@ -1367,4 +1375,136 @@ static void kTestFileIO(const char* pcParameterBuffer) {
     else kPrintf("Fail\n");
 
     kFreeMemory(pbBuffer);
+}
+
+//27chapter
+// measure speed : read & write file
+static void kTestPerformance(const char* pcParameterBuffer) {
+    FILE* pstFile;
+    DWORD dwClusterTestFileSize;
+    DWORD dwOneByteTestFileSize;
+    QWORD qwLastTickCount;
+    DWORD i;
+    BYTE* pbBuffer;
+
+    // file test : cluster up to 1mb
+    dwClusterTestFileSize = 1024 * 1024;
+    // test only 16KB
+    dwOneByteTestFileSize = 16 * 1024;
+
+    // allocate buffer memory (by testing)
+    pbBuffer = kAllocateMemory(dwClusterTestFileSize);
+
+    if(pbBuffer == NULL) {
+        kPrintf("Memory Allocate Fail\n");
+        return;
+    }
+
+    // init buffer
+    kMemSet(pbBuffer, 0, FILESYSTEM_CLUSTERSIZE);
+
+    kPrintf("========== File I/O Performance Test ==========");
+
+    //========================================================================================================================
+    // Test : sequentiall write a file ( by cluster unit )
+    //========================================================================================================================
+    kPrintf("1.Sequential Read/Write Test(Cluster Size)\n");
+
+    // remove existing test file -> make new
+    remove("performance.txt");
+    pstFile = fopen("performance.txt", "w");
+    if(pstFile == NULL) {
+        kPrintf("File Open Fail\n");
+        kFreeMemory(pbBuffer);
+        return;
+    }
+
+    qwLastTickCount = kGetTickCount();
+    // Test written cluster by cluster
+    for(i = 0; i < (dwClusterTestFileSize / FILESYSTEM_CLUSTERSIZE); i++) {
+        if(fwrite(pbBuffer, 1, FILESYSTEM_CLUSTERSIZE, pstFile) != FILESYSTEM_CLUSTERSIZE) {
+            kPrintf("Write Fail\n");
+            fclose(pstFile);
+            kFreeMemory(pbBuffer);
+            return;
+        }
+    }
+    // print time
+    kPrintf("Sequential Write(Cluster size): %d ms\n", kGetTickCount() - qwLastTickCount);
+
+    //========================================================================================================================
+    // test : sequential reading file in cluster unit
+    //========================================================================================================================
+    // move first file
+    fseek(pstFile, 0, SEEK_SET);
+    qwLastTickCount = kGetTickCount();
+    // test :  read in cluster
+    for(i = 0; i < (dwClusterTestFileSize / FILESYSTEM_CLUSTERSIZE); i++) {
+        if(fread(pbBuffer, 1, FILESYSTEM_CLUSTERSIZE, pstFile) != FILESYSTEM_CLUSTERSIZE) {
+            kPrintf("Read Fail\n");
+            fclose(pstFile);
+            kFreeMemory(pbBuffer);
+            return;
+        }
+    }
+    // print time
+    kPrintf("Sequential Read(Cluste Size): %d ms\n", kGetTickCount() - qwLastTickCount);
+
+    //========================================================================================================================
+    // test : sequentially writing file in units of 1 byte
+    //========================================================================================================================
+    kPrintf("2.Sequential Read/Write Test(1 Byte)\n");
+
+    // remove existing test file
+    // create a new one
+    remove("performance.txt");
+    pstFile = fopen("performance.txt", "w");
+    if(pstFile == NULL) {
+        kPrintf("File Open Fail\n");
+        kFreeMemory(pbBuffer);
+        return;
+    }   
+
+    qwLastTickCount = kGetTickCount();
+
+    for(i = 0; i < dwOneByteTestFileSize; i++) {
+        if(fwrite(pbBuffer, 1, 1, pstFile) != 1) {
+            kPrintf("Write Fail\n");
+            fclose(pstFile);
+            kFreeMemory(pbBuffer);
+            return;
+        }
+    }
+    // print time
+    kPrintf("Sequential Write(1 Byte): %d ms\n", kGetTickCount() - qwLastTickCount);
+    //========================================================================================================================
+    // test : reads file sequentially in units of 1 byte
+    //========================================================================================================================
+    // move first file
+    fseek(pstFile, 0, SEEK_SET);
+
+    qwLastTickCount = kGetTickCount();
+    for(i = 0; i < dwOneByteTestFileSize; i++) {
+        if(fread(pbBuffer, 1, 1, pstFile) != 1) {
+            kPrintf("Readd Fail\n");
+            fclose(pstFile);
+            kFreeMemory(pbBuffer);
+            return;
+        }
+    }
+    // print time
+    kPrintf("Sequential Read(1 Byte): %d ms\n", kGetTickCount() - qwLastTickCount);
+    fclose(pstFile);
+    kFreeMemory(pbBuffer);
+}
+
+// write all data in hdd
+static void kFlushCache(const char* pcParameterBuffer) {
+    QWORD qwTickCount;
+
+    qwTickCount = kGetTickCount();
+    kPrintf("Cache Flush...");
+    if(kFlushFileSystemCache() == TRUE) kPrintf("Pass\n");
+    else kPrintf("Fail\n");
+    kPrintf("Total Time = %d ms\n", kGetTickCount() - qwTickCount);
 }

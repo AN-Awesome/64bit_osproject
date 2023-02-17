@@ -49,9 +49,6 @@ void Main(void) {
 
     kEnableInterrupt();
 
-    // Init HDD
-    if(kInitializeHDD() == TRUE) ;
-    else kPrintStringXY(0, 0, "HARDDISK ERROR", RED);
 
     // Init File System
     if(kInitializeFileSystem() == TRUE) ;

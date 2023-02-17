@@ -1072,7 +1072,7 @@ static void kShowRootDirectory(const char* pcParameterBuffer) {
     dwUsedClusterCount = 0;
     while(1) {
         pstEntry = readdir(pstDirectory);
-        if(pstEntry == NULL) break;
+        if(pstEntry == NULL) break; // no more files..
 
         iTotalCount++;
         dwTotalByte += pstEntry->dwFileSize;
@@ -1117,7 +1117,7 @@ static void kShowRootDirectory(const char* pcParameterBuffer) {
     kSetColor(GREEN);
 
     kPrintf("\n\t\tTotal File Count: %d\n", iTotalCount);
-    kPrintf("\t\tTotal File Size: %d KByte (%d Cluster)\n", dwTotalByte / 1024, dwUsedClusterCount);
+    kPrintf("\t\tTotal File Size: %d KByte (%d Cluster)\n", dwTotalByte, dwUsedClusterCount);
 
     // print 'free space' used remaining cluster count
     kPrintf("\t\tFree Space: %d KByte (%d Cluster)\n", (stManager.dwTotalClusterCount - dwUsedClusterCount) * FILESYSTEM_CLUSTERSIZE / 1024, stManager.dwTotalClusterCount - dwUsedClusterCount);

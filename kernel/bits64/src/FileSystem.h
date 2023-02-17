@@ -5,6 +5,7 @@
 #include "Synchronization.h"
 #include "HardDisk.h"
 #include "CacheManager.h"
+
 // Macro Function Pointer
 #define FILESYSTEM_SIGNATURE                0x7E38CF10  // Awesome File System Signature
 #define FILESYSTEM_SECTORSPERCLUSTER        8           // Cluster Size
@@ -159,7 +160,7 @@ static BOOL kInternalReadClusterWithCache(DWORD dwOffset, BYTE* pbBuffer);
 static BOOL kInternalWriteClusterWithoutCache(DWORD dwOffset, BYTE* pbBuffer);
 static BOOL kInternalWriteClusterWithCache(DWORD dwOffset, BYTE* pbBuffer);
 
-static CACHEBUFFER* kAllocateCacheBufferWithFlush(int iCacheTableIndex);
+static CACHEBUFFER* kAllocateCacheBufferWithFlush(int);
 BOOL kFlushFileSystemCache(void);
 
 // High Level Function // 26 chapter

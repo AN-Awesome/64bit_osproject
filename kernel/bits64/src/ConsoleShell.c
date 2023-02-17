@@ -1117,7 +1117,7 @@ static void kShowRootDirectory(const char* pcParameterBuffer) {
     kSetColor(GREEN);
 
     kPrintf("\n\t\tTotal File Count: %d\n", iTotalCount);
-    kPrintf("\t\tTotal File Size: %d KByte (%d Cluster)\n", dwTotalByte, dwUsedClusterCount);
+    kPrintf("\t\tTotal File Size: %d KByte (%d Cluster)\n", dwTotalByte / 1024, dwUsedClusterCount);
 
     // print 'free space' used remaining cluster count
     kPrintf("\t\tFree Space: %d KByte (%d Cluster)\n", (stManager.dwTotalClusterCount - dwUsedClusterCount) * FILESYSTEM_CLUSTERSIZE / 1024, stManager.dwTotalClusterCount - dwUsedClusterCount);
@@ -1147,7 +1147,7 @@ static void kWriteDataToFile(const char* pcParameterBuffer) {
     // create file
     fp = fopen(vcFileName, "w");
     if(fp == NULL) {
-        kPrintf("%s File Open Fail\n", vcFileName);
+        kPrintf(" %s File Open Fail\n", vcFileName);
         return;
     }
 

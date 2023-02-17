@@ -1091,8 +1091,10 @@ static void kShowRootDirectory(const char* pcParameterBuffer) {
 
         // add start cluster of file
         kSPrintf(vcTempValue, "0x%X Cluster", pstEntry->dwStartClusterIndex);
-        kMemCpy(vcBuffer + 55, vcTempValue, kStrLen(vcTempValue));
+        kMemCpy(vcBuffer + 55, vcTempValue, kStrLen(vcTempValue) + 1);
         kPrintf(" %s\n", vcBuffer);
+
+        //kPrintf("[FILENAME]%s / [SIZE]%d Byte / [Cluster]%X Cluster\n", pstEntry->d_name, pstEntry->dwFileSize, pstEntry->dwStartClusterIndex);
 
         if((iCount != 0) && ((iCount % 20) == 0)) {
             kPrintf("Press an key to continue... ('q' is exit) : ");
@@ -1104,7 +1106,9 @@ static void kShowRootDirectory(const char* pcParameterBuffer) {
         iCount++;
     }
 
-    kPrintf("\t\tTotal File Count: %d\n", iTotalCount);
+    kSetColor(GREEN);
+
+    kPrintf("\n\t\tTotal File Count: %d\n", iTotalCount);
     kPrintf("\t\tTotal File Size: %d KByte (%d Cluster)\n", dwTotalByte, dwUsedClusterCount);
 
     // print 'free space' used remaining cluster count

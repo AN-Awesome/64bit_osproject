@@ -1273,6 +1273,7 @@ static void kTestFileIO(const char* pcParameterBuffer) {
     kPrintf("============ FILE I/O Function Test ============\n");
 
     // Allocate 4MB Buffer
+    kPrintf("Allocate 4MB Buffer\n");
     dwMaxFileSize = 4 * 1024 * 1024;
     pbBuffer = kAllocateMemory(dwMaxFileSize);
     if(pbBuffer == NULL) {
@@ -1280,7 +1281,14 @@ static void kTestFileIO(const char* pcParameterBuffer) {
         return;
     }
 
+    kPrintf("\n\n Press Any Key... \n\n");
+    kGetCh();
+
+    kPrintf("remove testfileio.bin\n");
     remove("testfileio.bin");
+
+    kPrintf("\n\n Press Any Key... \n\n");
+    kGetCh();
 
     // fileopen test
     kPrintf("1. File Open Fail Test..");
@@ -1291,6 +1299,9 @@ static void kTestFileIO(const char* pcParameterBuffer) {
         fclose(pstFile);
     }
 
+    kPrintf("\n\n Press Any Key... \n\n");
+    kGetCh();
+
     // file create test
     kPrintf("2. File Create Test");
     pstFile = fopen("testfileio.bin", "w");
@@ -1298,6 +1309,9 @@ static void kTestFileIO(const char* pcParameterBuffer) {
         kPrintf("\nPass\n");
         kPrintf("    File Handle [0x%Q]\n", pstFile);
     } else kPrintf("\nFail\n");
+
+    kPrintf("\n\n Press Any Key... \n\n");
+    kGetCh();
 
     // sequential filewrite test
     kPrintf("3. Sequential Write Test(Cluster Size)...");
@@ -1312,25 +1326,31 @@ static void kTestFileIO(const char* pcParameterBuffer) {
     }
     if(i >= 100) kPrintf("Pass\n");
 
+    kPrintf("\n\n Press Any Key... \n\n");
+    kGetCh();
+
     // sequential file read test
     kPrintf("4. Sequential Read And Verify Test(Cluster Size)...");
     fseek(pstFile, -100 * FILESYSTEM_CLUSTERSIZE, SEEK_END);
 
     for(i = 0; i < 100; i++) {
         if(fread(pbBuffer, 1, FILESYSTEM_CLUSTERSIZE, pstFile) != FILESYSTEM_CLUSTERSIZE) {
-            kPrintf("Fail\n");
+            kPrintf("1Fail\n");
             return;
         }
 
         for(j = 0; j < FILESYSTEM_CLUSTERSIZE; j++) {
             if(pbBuffer[j] != (BYTE)i) {
-                kPrintf("Fail\n");
-                kPrintf("    %d Cluster Error. [%X] != [%X]\n", i, pbBuffer[j], (BYTE)i);
+                kPrintf("2Fail\n");
+                kPrintf("    %d Cluster Error. [%X] != [%X]\n", i, pbBuffer[j], (BYTE)i);                
                 break;
             }
         }
     }
     if(i >= 100) kPrintf("Pass\n");
+
+    kPrintf("\n\n Press Any Key... \n\n");
+    kGetCh();
 
     // random write test
     kPrintf("5. Random Write Test...\n");
@@ -1357,6 +1377,9 @@ static void kTestFileIO(const char* pcParameterBuffer) {
     fwrite(&i, 1, 1, pstFile);
     pbBuffer[dwMaxFileSize - 1] = (BYTE)i;
 
+    kPrintf("\n\n Press Any Key... \n\n");
+    kGetCh();
+
     // random read test
     kPrintf("6. Random Read And Verify Test...\n");
     for(i = 0; i < 100; i++) {
@@ -1381,6 +1404,9 @@ static void kTestFileIO(const char* pcParameterBuffer) {
         }
         kPrintf("Pass\n");
     }
+
+    kPrintf("\n\n Press Any Key... \n\n");
+    kGetCh();
     
     // re-sequential read test
     kPrintf("7. Sequential Write, Read And Verify Test(1024 Byte)...\n");
@@ -1398,25 +1424,34 @@ static void kTestFileIO(const char* pcParameterBuffer) {
         kPrintf("    [%d] Offset [%d] Byte [%d] Read And Verify...", i, i * 1024, 1024);
 
         if(fread(vbTempBuffer, 1, 1024, pstFile) != 1024) {
-            kPrintf("Fail\n");
+            kPrintf("__Fail\n");
             return;
         }
 
         if(kMemCmp(pbBuffer + (i * 1024), vbTempBuffer, 1024) != 0) {
-            kPrintf("Fail\n");
+            kPrintf("___________Fail\n");
             break;
         } else kPrintf("Pass\n");
     }
+
+    kPrintf("\n\n Press Any Key... \n\n");
+    kGetCh();
 
     // File delete fail test
     kPrintf("8. File Delete Fail Test...");
     if(remove("testfileio.bin") != 0) kPrintf("Pass\n");
     else kPrintf("Fail\n");
 
+    kPrintf("\n\n Press Any Key... \n\n");
+    kGetCh();
+
     // File Close Test
     kPrintf("9. File Close Test...");
     if(fclose(pstFile) == 0) kPrintf("Pass\n");
     else kPrintf("Fail\n");
+
+    kPrintf("\n\n Press Any Key... \n\n");
+    kGetCh();
 
     // File Delete Test
     kPrintf("10. File Delete Test...");

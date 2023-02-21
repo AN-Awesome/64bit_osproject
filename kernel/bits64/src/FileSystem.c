@@ -194,7 +194,7 @@ static CACHEBUFFER* kAllocateCacheBufferWithFlush(int iCacheTableIndex) {
         if(pstCacheBuffer->bChanged == TRUE) switch(iCacheTableIndex) {
             case CACHE_CLUSTERLINKTABLEAREA:
                 if(kInternalWriteClusterLinkTableWithoutCache(pstCacheBuffer->dwTag, pstCacheBuffer->pbBuffer) == FALSE) {
-                    kPrintf("Cache Buffer Write Fail.\n");
+                    kPrintf("1Cache Buffer Write Fail.\n");
                     return NULL;
                 } break;
             case CACHE_DATAAREA:
@@ -238,7 +238,10 @@ static BOOL kInternalWriteClusterLinkTableWithCache(DWORD dwOffset, BYTE* pbBuff
     return TRUE;
 }
 static BOOL kReadCluster(DWORD dwOffset, BYTE *pbBuffer) {
-    if(gs_stFileSystemManager.bCacheEnable == FALSE) kInternalReadClusterWithOutCache(dwOffset, pbBuffer);
+    if(gs_stFileSystemManager.bCacheEnable == FALSE) {
+        kPrintf("???");
+        kInternalReadClusterWithOutCache(dwOffset, pbBuffer);
+    }
     else kInternalReadClusterWithCache(dwOffset, pbBuffer);
 }
 // Read 1 Cluster from Data Area Offset
@@ -795,8 +798,10 @@ int kSeekFile(FILE* pstFile, int iOffset, int iOrigin) {
     if(dwLastClusterOffset < dwClusterOffsetToMove) {
         pstFileHandle->dwCurrentOffset = pstFileHandle->dwFileSize;
         // sync
-        kUnlock( &(gs_stFileSystemManager.stMutex));
-        if(kWriteZero(pstFile, dwRealOffset - pstFileHandle->dwFileSize) == FALSE) return 0;
+        if(kWriteZero(pstFile, dwRealOffset - pstFileHandle->dwFileSize) == FALSE) {
+            kUnlock( &(gs_stFileSystemManager.stMutex));
+            return 0;
+        }
     }
     pstFileHandle->dwCurrentOffset = dwRealOffset;
     
@@ -888,7 +893,7 @@ DIR* kOpenDirectory(const char* pcDirectoryName) {
     // ignore directory name
     // allocate hande and return
     pstDirectory = kAllocateFileDirectoryHandle();
-    if(pstDirectory == NULL) {
+    if(pstDirectoryBuffer == NULL) {
         // sync
         kUnlock( &(gs_stFileSystemManager.stMutex));
         return NULL;

@@ -965,33 +965,36 @@ static void kWriteSector(const char* pcParameterBuffer) {
 // 25 chapter
 // Connect HDD
 static void kMountHDD(const char* pcParameterBuffer) {
+    kSetColor(BROWN);
     if(kMount() == FALSE) {
-        kPrintf("HDD Mount Fail\n");
+        kPrintf(" HDD Mount Fail\n");
         return;
     }
-    kPrintf("HDD Mount Success\n");
+    kPrintf(" HDD Mount Success\n");
 }
 
 // format : HDD File System
 static void kFormatHDD(const char* pcParameterBuffer) {
+    kSetColor(BROWN);
     if(kFormat() == FALSE) {
-        kPrintf("HDD Format Fail\n");
+        kPrintf(" HDD Format Fail\n");
         return;
     }
-    kPrintf("HDD Format Success\n");
+    kPrintf(" HDD Format Success\n");
 }
 
 // Show : File System info
 static void kShowFileSystemInformation(const char* pcParameterBuffer) {
     FILESYSTEMMANAGER stManager;
     kGetFileSystemInformation(&stManager);
-    kPrintf("========== File System Information ==========\n");
-    kPrintf("Mouted:\t\t\t\t\t %d\n", stManager.bMounted);
-    kPrintf("Reserved Sector Count:\t\t\t %d Secotr\n", stManager.dwReservedSectorCount);
-    kPrintf("Cluster Link Table Start Address:\t %d Sector\n", stManager.dwClusterLinkAreaStartAddress);
-    kPrintf("Cluster Link Table Size:\t\t %d Sector\n", stManager.dwClusterLinkAreaSize);
-    kPrintf("Data Area Start Address:\t\t %d Sector\n", stManager.dwDataAreaStartAddress);
-    kPrintf("Total Cluster Count:\t\t\t %d Cluster\n", stManager.dwTotalClusterCount);
+    kSetColor(GREEN);
+    kPrintf(" ========== File System Information ==========\n");
+    kPrintf(" Mouted:\t\t\t\t\t %d\n", stManager.bMounted);
+    kPrintf(" Reserved Sector Count:\t\t\t %d Secotr\n", stManager.dwReservedSectorCount);
+    kPrintf(" Cluster Link Table Start Address:\t %d Sector\n", stManager.dwClusterLinkAreaStartAddress);
+    kPrintf(" Cluster Link Table Size:\t\t %d Sector\n", stManager.dwClusterLinkAreaSize);
+    kPrintf(" Data Area Start Address:\t\t %d Sector\n", stManager.dwDataAreaStartAddress);
+    kPrintf(" Total Cluster Count:\t\t\t %d Cluster\n", stManager.dwTotalClusterCount);
 }
 
 // Create empty file (in root directory)
@@ -1009,17 +1012,22 @@ static void kCreateFileInRootDirectory(const char* pcParameterBuffer) {
     iLength = kGetNextParameter(&stList, vcFileName);
     vcFileName[iLength] = '\0';
     if((iLength > (FILESYSTEM_MAXFILENAMELENGTH - 1)) || (iLength == 0)) {
-        kPrintf("Too Long or Too Short File Name\n");
+        kPrintf(" Too Long or Too Short File Name\n");
         return;
     }
 
     pstFile = fopen(vcFileName, "w");
     if(pstFile == NULL) {
-        kPrintf("File Create Fail\n");
+        kSetColor(RED_BR);
+        kPrintf(" File Create Fail\n");
         return;
     }
     fclose(pstFile);
-    kPrintf("File Create Success\n");
+    kSetColor(BLUE_BR);
+    kPrintf(" [%s]", vcFileName);
+
+    kSetColor(GREEN);
+    kPrintf(" File Create Success\n");
 }
 
 // Delete files from root directory
@@ -1036,16 +1044,21 @@ static void kDeleteFileInRootDirectory(const char* pcParameterBuffer) {
     vcFileName[iLength] = '\0';
 
     if((iLength > (FILESYSTEM_MAXFILENAMELENGTH - 1)) || (iLength == 0)) {
-        kPrintf("Too Long or Too Short File Name\n");
+        kSetColor(RED_BR);
+        kPrintf(" Too Long or Too Short File Name\n");
         return;
     }
 
     if(remove(vcFileName) != 0) {
-        kPrintf("File Not Found or File Opened");
+        kSetColor(RED_BR);
+        kPrintf(" File Not Found or File Opened");
         return;
     }
+    kSetColor(BLUE_BR);
+    kPrintf(" [%s]", vcFileName);
 
-    kPrintf("File Delete Success\n");
+    kSetColor(GREEN);
+    kPrintf(" File Delete Success\n");
 }
 
 // Display Root Directory file list
@@ -1063,10 +1076,12 @@ static void kShowRootDirectory(const char* pcParameterBuffer) {
 
     pstDirectory = opendir("/");
     if(pstDirectory == NULL) {
-        kPrintf("Root Directory Open Fail\n");
+        kSetColor(RED_BR);
+        kPrintf(" Root Directory Open Fail\n");
         return;
     }
 
+    kSetColor(WHITE);
     iTotalCount = 0;
     dwTotalByte = 0;
     dwUsedClusterCount = 0;
@@ -1105,7 +1120,7 @@ static void kShowRootDirectory(const char* pcParameterBuffer) {
         //kPrintf("[FILENAME]%s / [SIZE]%d Byte / [Cluster]%X Cluster\n", pstEntry->d_name, pstEntry->dwFileSize, pstEntry->dwStartClusterIndex);
 
         if((iCount != 0) && ((iCount % 20) == 0)) {
-            kPrintf("Press an key to continue... ('q' is exit) : ");
+            kPrintf(" Press an key to continue... ('q' is exit) : ");
             if(kGetCh() == 'q') {
                 kPrintf("\n");
                 break;
@@ -1133,6 +1148,8 @@ static void kWriteDataToFile(const char* pcParameterBuffer) {
     FILE *fp;
     int iEnterCount;
     BYTE bKey;
+    int iCursorX, iCursorY;
+    kPrintf("\n");
 
     // extract filename
     kInitializeParameter(&stList, pcParameterBuffer);
@@ -1140,6 +1157,7 @@ static void kWriteDataToFile(const char* pcParameterBuffer) {
     vcFileName[iLength] = '\0';
 
     if((iLength > (FILESYSTEM_MAXFILENAMELENGTH - 1)) || (iLength == 0)) {
+        kSetColor(RED_BR);
         kPrintf("Too Long or Too Short file Name\n");
         return;
     }
@@ -1147,27 +1165,55 @@ static void kWriteDataToFile(const char* pcParameterBuffer) {
     // create file
     fp = fopen(vcFileName, "w");
     if(fp == NULL) {
+        kSetColor(RED_BR);
         kPrintf(" %s File Open Fail\n", vcFileName);
         return;
     }
 
     iEnterCount = 0;
 
+    kSetColor(BLUE_BR);
+
     while(1) {
         bKey = kGetCh();
 
-        if(bKey == KEY_ESC) {
+        if(bKey == KEY_ENTER) {
             iEnterCount++;
             if(iEnterCount >= 3) break;
         } else iEnterCount = 0;
 
+        /*
         kPrintf("%c", bKey);
+        */
+        // Backspace key
+        if(bKey == KEY_BACKSPACE) {
+            kGetCursor(&iCursorX, &iCursorY);
+            kPrintStringXY(iCursorX - 1, iCursorY, " ", WHITE);
+            kSetCursor(iCursorX - 1, iCursorY);
+
+            iEnterCount = 0;
+        } else if (bKey == KEY_ENTER) { // Enter key
+            kPrintf("\n");
+
+            iEnterCount++;
+            if(iEnterCount >= 3) break;
+        } else if ((bKey == KEY_LSHIFT) || (bKey == KEY_RSHIFT) ||(bKey == KEY_CAPSLOCK) || (bKey == KEY_NUMLOCK) || (bKey == KEY_SCROLLLOCK)) ; // Ignores Shift key, Caps Lock, Num Lock, Scroll Lock
+        else {
+            // Tab to Blank
+            if (bKey == KEY_TAB) bKey = ' ';
+
+            kPrintf("%c", bKey);
+            iEnterCount = 0;
+        }
+
         if(fwrite(&bKey, 1, 1, fp) != 1) {
             kPrintf("File Write Fail\n");
             break;
         }
     }
-    kPrintf("File Create Success\n");
+
+    kSetColor(GREEN);
+    kPrintf(" File Create Success\n");
     fclose(fp);
 }
 

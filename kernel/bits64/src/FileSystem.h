@@ -151,7 +151,7 @@ static int kFindDirectoryEntry(const char* pcFileName, DIRECTORYENTRY* pstEntry)
 void kGetFileSystemInformation(FILESYSTEMMANAGER* pstManager);
 
 // Cache-Related Func.
-static BOOL kInternalReadClusterLinkTableWithoutCahce(DWORD dwOffset, BYTE* pbBuffer);
+static BOOL kInternalReadClusterLinkTableWithoutCache(DWORD dwOffset, BYTE* pbBuffer);
 static BOOL kInternalReadClusterLinkTableWithCache(DWORD dwOffset, BYTE* pbBuffer);
 static BOOL kInternalWriteClusterLinkTableWithoutCache(DWORD dwOffset, BYTE* pbBuffer);
 static BOOL kInternalWriteClusterLinkTableWithCache(DWORD dwOffset, BYTE* pbBuffer);

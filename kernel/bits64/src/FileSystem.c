@@ -683,7 +683,7 @@ DWORD kWriteFile(const void* pvBuffer, DWORD dwSize, DWORD dwCount, FILE* pstFil
     }
     // Sync.
     kUnlock(&(gs_stFileSystemManager.stMutex));
-    return dwWriteCount;
+    return (dwWriteCount / dwSize);
 }
 // Fill File with 0 by Count
 BOOL kWriteZero(FILE* pstFile, DWORD dwCount) {
@@ -888,7 +888,7 @@ DIR* kOpenDirectory(const char* pcDirectoryName) {
     // ignore directory name
     // allocate hande and return
     pstDirectory = kAllocateFileDirectoryHandle();
-    if(pstDirectoryBuffer == NULL) {
+    if(pstDirectory == NULL) {
         // sync
         kUnlock( &(gs_stFileSystemManager.stMutex));
         return NULL;

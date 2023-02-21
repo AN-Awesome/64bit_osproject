@@ -1487,7 +1487,7 @@ static void kTestPerformance(const char* pcParameterBuffer) {
     // init buffer
     kMemSet(pbBuffer, 0, FILESYSTEM_CLUSTERSIZE);
 
-    kPrintf("========== File I/O Performance Test ==========");
+    kPrintf("========== File I/O Performance Test ==========\n");
 
     //========================================================================================================================
     // Test : sequentiall write a file ( by cluster unit )

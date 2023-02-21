@@ -186,7 +186,7 @@ static CACHEBUFFER* kAllocateCacheBufferWithFlush(int iCacheTableIndex) {
     CACHEBUFFER* pstCacheBuffer;
     pstCacheBuffer = kAllocateCacheBuffer(iCacheTableIndex);
     if(pstCacheBuffer == NULL) {
-        pstCacheBuffer - kGetVictimInCacheBuffer(iCacheTableIndex);
+        pstCacheBuffer = kGetVictimInCacheBuffer(iCacheTableIndex);
         if(pstCacheBuffer == NULL) {
             kPrintf("Cache Allocate Fail.\n");
             return NULL;
@@ -837,7 +837,7 @@ int kRemoveFile(const char* pcFileName) {
 
     // Check file name
     iFileNameLength = kStrLen(pcFileName);
-    if((iFileNameLength > (sizeof(stEntry.vcFileName) - 1)) || (iFileNameLength == 0)) return -1;
+    if((iFileNameLength > (sizeof(stEntry.vcFileName) - 1)) || (iFileNameLength == 0)) return NULL;
 
     // sync
     kLock( &(gs_stFileSystemManager.stMutex));

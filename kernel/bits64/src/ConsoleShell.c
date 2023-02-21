@@ -984,7 +984,7 @@ static void kFormatHDD(const char* pcParameterBuffer) {
 // Show : File System info
 static void kShowFileSystemInformation(const char* pcParameterBuffer) {
     FILESYSTEMMANAGER stManager;
-    kGetFileSystemInformation( &stManager);
+    kGetFileSystemInformation(&stManager);
     kPrintf("========== File System Information ==========\n");
     kPrintf("Mouted:\t\t\t\t\t %d\n", stManager.bMounted);
     kPrintf("Reserved Sector Count:\t\t\t %d Secotr\n", stManager.dwReservedSectorCount);

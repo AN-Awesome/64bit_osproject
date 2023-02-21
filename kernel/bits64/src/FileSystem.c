@@ -155,16 +155,14 @@ BOOL kGetHDDInformation(HDDINFORMATION* pstInformation) {
     return bResult;
 }
 
-// Read 1 Sector from Cluster Link Table / No use Cache 
-static BOOL kInternalReadClusterLinkTableWithoutCache(DWORD dwOffset, BYTE* pbBuffer) {
-    return gs_pfReadHDDSector(TRUE, TRUE, dwOffset + gs_stFileSystemManager.dwClusterLinkAreaStartAddress, 1, pbBuffer);
-}
-
 static BOOL kReadClusterLinkTable(DWORD dwOffset, BYTE* pbBuffer) {
     if(gs_stFileSystemManager.bCacheEnable == FALSE) kInternalReadClusterLinkTableWithoutCache(dwOffset, pbBuffer);
     else kInternalReadClusterLinkTableWithCache(dwOffset, pbBuffer);
 }
-
+// Read 1 Sector from Cluster Link Table / No use Cache 
+static BOOL kInternalReadClusterLinkTableWithoutCache(DWORD dwOffset, BYTE* pbBuffer) {
+    return gs_pfReadHDDSector(TRUE, TRUE, dwOffset + gs_stFileSystemManager.dwClusterLinkAreaStartAddress, 1, pbBuffer);
+}
 // Read 1 Sector from Cluster Link Table / Use Cache
 static BOOL kInternalReadClusterLinkTableWithCache(DWORD dwOffset, BYTE* pbBuffer) {
     CACHEBUFFER* pstCacheBuffer;
@@ -364,9 +362,9 @@ static int kFindFreeDirectoryEntry(void) {
     return -1;
 }
 
-static BOOL kSetDirectoryEntryData(int iIndex, DIRECTORYENTRY *pstEntry) {
-    DIRECTORYENTRY *pstRootEntry;
-    if((gs_stFileSystemManager.bMounted == FALSE) || (iIndex < 0) || (iIndex >=FILESYSTEM_MAXDIRECTORYENTRYCOUNT)) return FALSE;
+static BOOL kSetDirectoryEntryData(int iIndex, DIRECTORYENTRY* pstEntry) {
+    DIRECTORYENTRY* pstRootEntry;
+    if((gs_stFileSystemManager.bMounted == FALSE) || (iIndex < 0) || (iIndex >= FILESYSTEM_MAXDIRECTORYENTRYCOUNT)) return FALSE;
     if(kReadCluster(0, gs_vbTempBuffer) == FALSE) return FALSE;
     pstRootEntry = (DIRECTORYENTRY*)gs_vbTempBuffer;
     kMemCpy(pstRootEntry + iIndex, pstEntry, sizeof(DIRECTORYENTRY));
@@ -375,8 +373,8 @@ static BOOL kSetDirectoryEntryData(int iIndex, DIRECTORYENTRY *pstEntry) {
     return TRUE;
 }
 
-static BOOL kGetDirectoryEntryData(int iIndex, DIRECTORYENTRY *pstEntry) {
-    DIRECTORYENTRY *pstRootEntry;
+static BOOL kGetDirectoryEntryData(int iIndex, DIRECTORYENTRY* pstEntry) {
+    DIRECTORYENTRY* pstRootEntry;
     if((gs_stFileSystemManager.bMounted == FALSE) || (iIndex < 0) || (iIndex >= FILESYSTEM_MAXDIRECTORYENTRYCOUNT)) return FALSE;
 
     if(kReadCluster(0, gs_vbTempBuffer) == FALSE) return FALSE;
@@ -386,8 +384,8 @@ static BOOL kGetDirectoryEntryData(int iIndex, DIRECTORYENTRY *pstEntry) {
     return TRUE;
 }
 
-static int kFindDirectoryEntry(const char* pcFileName, DIRECTORYENTRY *pstEntry) {
-    DIRECTORYENTRY *pstRootEntry;
+static int kFindDirectoryEntry(const char* pcFileName, DIRECTORYENTRY* pstEntry) {
+    DIRECTORYENTRY* pstRootEntry;
     int i, iLength;
 
     if(gs_stFileSystemManager.bMounted == FALSE) return -1;
@@ -405,7 +403,7 @@ static int kFindDirectoryEntry(const char* pcFileName, DIRECTORYENTRY *pstEntry)
     return -1;
 }
 
-void kGetFileSystemInformation(FILESYSTEMMANAGER *pstManager) {
+void kGetFileSystemInformation(FILESYSTEMMANAGER* pstManager) {
     kMemCpy(pstManager, &gs_stFileSystemManager, sizeof(gs_stFileSystemManager));
 }
 //======================
@@ -582,7 +580,7 @@ DWORD kReadFile(void* pvBuffer, DWORD dwSize, DWORD dwCount, FILE* pstFile) {
         // Read Cluster and Copy to Buffer
         //================================
         if(kReadCluster(pstFileHandle->dwCurrentClusterIndex, gs_vbTempBuffer) == FALSE) break;
-        dwOffsetInCluster = pstFileHandle->dwCurrentClusterIndex % FILESYSTEM_CLUSTERSIZE;
+        dwOffsetInCluster = pstFileHandle->dwCurrentOffset % FILESYSTEM_CLUSTERSIZE;
         dwCopySize = MIN(FILESYSTEM_CLUSTERSIZE - dwOffsetInCluster, dwTotalCount - dwReadCount);
         kMemCpy((char*) pvBuffer + dwReadCount, gs_vbTempBuffer + dwOffsetInCluster, dwCopySize);
         dwReadCount += dwCopySize;

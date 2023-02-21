@@ -1295,15 +1295,16 @@ static void kTestFileIO(const char* pcParameterBuffer) {
     kPrintf("2. File Create Test");
     pstFile = fopen("testfileio.bin", "w");
     if(pstFile != NULL) {
-        kPrintf("Pass\n");
+        kPrintf("\nPass\n");
         kPrintf("    File Handle [0x%Q]\n", pstFile);
-    } else kPrintf("Fail\n");
+    } else kPrintf("\nFail\n");
 
     // sequential filewrite test
     kPrintf("3. Sequential Write Test(Cluster Size)...");
     for(i = 0; i < 100; i++) {
         kMemSet(pbBuffer, i, FILESYSTEM_CLUSTERSIZE);
         if(fwrite(pbBuffer, 1, FILESYSTEM_CLUSTERSIZE, pstFile) != FILESYSTEM_CLUSTERSIZE) {
+            kPrintf("\n1\n");
             kPrintf("Fail\n");
             kPrintf("    %d Cluster Error\n", i);
             break;

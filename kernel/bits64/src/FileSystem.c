@@ -186,7 +186,7 @@ static CACHEBUFFER* kAllocateCacheBufferWithFlush(int iCacheTableIndex) {
     CACHEBUFFER* pstCacheBuffer;
     pstCacheBuffer = kAllocateCacheBuffer(iCacheTableIndex);
     if(pstCacheBuffer == NULL) {
-        pstCacheBuffer - kGetVictimInCacheBuffer(iCacheTableIndex);
+        pstCacheBuffer = kGetVictimInCacheBuffer(iCacheTableIndex);
         if(pstCacheBuffer == NULL) {
             kPrintf("Cache Allocate Fail.\n");
             return NULL;

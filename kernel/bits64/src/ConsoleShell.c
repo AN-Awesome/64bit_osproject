@@ -1152,9 +1152,11 @@ static void kWriteDataToFile(const char* pcParameterBuffer) {
     }
 
     iEnterCount = 0;
+
     while(1) {
         bKey = kGetCh();
-        if(bKey = KEY_ENTER) {
+
+        if(bKey == KEY_ESC) {
             iEnterCount++;
             if(iEnterCount >= 3) break;
         } else iEnterCount = 0;

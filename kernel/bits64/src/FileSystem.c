@@ -420,7 +420,7 @@ static void* kAllocateFileDirectoryHandle(void) {
     for(i = 0; i < FILESYSTEM_HANDLE_MAXCOUNT; i++) {
         // Return if Empty
         if(pstFile->bType == FILESYSTEM_TYPE_FREE) {
-            pstFile ->bType == FILESYSTEM_TYPE_FILE;
+            pstFile->bType = FILESYSTEM_TYPE_FILE;
             return pstFile;
         }
         // Move Next

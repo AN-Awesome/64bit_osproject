@@ -39,7 +39,7 @@ int kReadRDDSector(BOOL bPrimary, BOOL bMaster, DWORD dwLBA, int iSectorCount, c
 
     // compare sector count(that can read first to end in lba address) & sector count(that to read)
     // calculate actual number of read
-    iRealReadCount = MIN(gs_stRDDManager.dwTotalSectorCount - dwLBA, iSectorCount);
+    iRealReadCount = MIN(gs_stRDDManager.dwTotalSectorCount - (dwLBA + iSectorCount), iSectorCount);
 
     kMemCpy(pcBuffer, gs_stRDDManager.pbBuffer + (dwLBA * 512), iRealReadCount * 512);
     return iRealReadCount;
@@ -49,7 +49,7 @@ int kReadRDDSector(BOOL bPrimary, BOOL bMaster, DWORD dwLBA, int iSectorCount, c
 int kWriteRDDSector(BOOL bPrimary, BOOL bMaster, DWORD dwLBA, int iSectorCount, char* pcBuffer) {
     int iRealWriteCount;
 
-    iRealWriteCount = MIN(gs_stRDDManager.dwTotalSectorCount - dwLBA, iSectorCount);
+    iRealWriteCount = MIN(gs_stRDDManager.dwTotalSectorCount - (dwLBA + iSectorCount), iSectorCount);
 
     kMemCpy(gs_stRDDManager.pbBuffer + (dwLBA * 512), pcBuffer, iRealWriteCount * 512);
 

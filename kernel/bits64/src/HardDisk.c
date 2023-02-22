@@ -5,7 +5,7 @@ static HDDMANAGER gs_stHDDManager;
 // HardDisk Device Driver Init.
 BOOL kInitializeHDD(void) {
     // Mutex Init.
-    kInitializeMutex( &(gs_stHDDManager.stMutex));
+    kInitializeMutex(&(gs_stHDDManager.stMutex));
     // Interrupt Flag Init.
     gs_stHDDManager.bPrimaryInterruptOccur = FALSE;
     gs_stHDDManager.bSecondaryInterrruptOccur = FALSE;

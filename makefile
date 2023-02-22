@@ -11,7 +11,7 @@ Disk.img: build/boot.bin build/kernel32.bin build/kernel64.bin
 	sudo chmod 755 Disk.img
 
 test:
-	sudo qemu-system-x86_64 -m 64 -fda ./Disk.img -hda ./HDD.img -boot a -rtc base=localtime -M pc
+	sudo qemu-system-x86_64 -m 64 -hda ./Disk.img -hdb ./HDD.img -boot a -rtc base=localtime -M pc
 
 clean:
 	clear

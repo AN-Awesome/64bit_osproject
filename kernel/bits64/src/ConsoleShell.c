@@ -896,6 +896,7 @@ static void kReadSector(const char* pcParameterBuffer) {
             }
             if(bExit == TRUE) break;
         }
+        kPrintf("\n");
     } else kPrintf("Read Fail\n");
     kFreeMemory(pcBuffer);
 }

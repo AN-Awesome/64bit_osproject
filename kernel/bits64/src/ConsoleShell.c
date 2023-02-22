@@ -511,6 +511,7 @@ static void kCreateTestTask(const char* pcParameterBuffer) {
             break;
 
         case 2:
+        default:
             for(i = 0; i < kAToI(vcCount, 10); i++) if(kCreateTask(TASK_FLAGS_LOW | TASK_FLAGS_THREAD, 0, 0, (QWORD)kTestTask2) == NULL) break;
             kPrintf("Task2 %d Created\n", i);
             break;

@@ -1199,7 +1199,7 @@ static void kWriteDataToFile(const char* pcParameterBuffer) {
 
             iEnterCount++;
             if(iEnterCount >= 3) break;
-        } else if ((bKey == KEY_LSHIFT) || (bKey == KEY_RSHIFT) ||(bKey == KEY_CAPSLOCK) || (bKey == KEY_NUMLOCK) || (bKey == KEY_SCROLLLOCK)) ; // Ignores Shift key, Caps Lock, Num Lock, Scroll Lock
+        } else if ((bKey == KEY_LSHIFT) || (bKey == KEY_RSHIFT) || (bKey == KEY_CAPSLOCK) || (bKey == KEY_NUMLOCK) || (bKey == KEY_SCROLLLOCK)) ; // Ignores Shift key, Caps Lock, Num Lock, Scroll Lock
         else {
             // Tab to Blank
             if (bKey == KEY_TAB) bKey = ' ';

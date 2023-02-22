@@ -100,7 +100,7 @@ typedef struct kFileHandleStruct {
 // Directory Data Sturcture : manage directories // 26 chapter
 typedef struct kDirectoryHandleStruct {
     DIRECTORYENTRY* pstDirectoryBuffer; // Buffer : save Root directory
-    int iCurrentOffset                  // directory pointer current location
+    int iCurrentOffset;                  // directory pointer current location
 } DIRECTORYHANDLE;
 
 // Data Sturcture : file & directory information
@@ -155,7 +155,7 @@ static BOOL kInternalReadClusterLinkTableWithoutCache(DWORD dwOffset, BYTE* pbBu
 static BOOL kInternalReadClusterLinkTableWithCache(DWORD dwOffset, BYTE* pbBuffer);
 static BOOL kInternalWriteClusterLinkTableWithoutCache(DWORD dwOffset, BYTE* pbBuffer);
 static BOOL kInternalWriteClusterLinkTableWithCache(DWORD dwOffset, BYTE* pbBuffer);
-static BOOL kInternalReadClusterWithOutCache(DWORD dwOffset, BYTE* pbBuffer);
+static BOOL kInternalReadClusterWithoutCache(DWORD dwOffset, BYTE* pbBuffer);
 static BOOL kInternalReadClusterWithCache(DWORD dwOffset, BYTE* pbBuffer);
 static BOOL kInternalWriteClusterWithoutCache(DWORD dwOffset, BYTE* pbBuffer);
 static BOOL kInternalWriteClusterWithCache(DWORD dwOffset, BYTE* pbBuffer);

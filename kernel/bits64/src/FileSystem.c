@@ -240,13 +240,13 @@ static BOOL kInternalWriteClusterLinkTableWithCache(DWORD dwOffset, BYTE* pbBuff
 static BOOL kReadCluster(DWORD dwOffset, BYTE *pbBuffer) {
     if(gs_stFileSystemManager.bCacheEnable == FALSE) {
         kPrintf("???");
-        kInternalReadClusterWithOutCache(dwOffset, pbBuffer);
+        kInternalReadClusterWithoutCache(dwOffset, pbBuffer);
     }
     else kInternalReadClusterWithCache(dwOffset, pbBuffer);
 }
 // Read 1 Cluster from Data Area Offset
 // Inernal Func. / No use Cache
-static BOOL kInternalReadClusterWithOutCache(DWORD dwOffset, BYTE* pbBuffer) {
+static BOOL kInternalReadClusterWithoutCache(DWORD dwOffset, BYTE* pbBuffer) {
     return gs_pfReadHDDSector(TRUE, TRUE, (dwOffset * FILESYSTEM_SECTORSPERCLUSTER) + gs_stFileSystemManager.dwDataAreaStartAddress, FILESYSTEM_SECTORSPERCLUSTER, pbBuffer);
 }
 // Read 1 Cluster from Data Area Offset
@@ -258,7 +258,7 @@ static BOOL kInternalReadClusterWithCache(DWORD dwOffset, BYTE* pbBuffer) {
         kMemCpy(pbBuffer, pstCacheBuffer->pbBuffer, FILESYSTEM_CLUSTERSIZE);
         return TRUE;
     }
-    if(kInternalReadClusterWithOutCache(dwOffset, pbBuffer) == FALSE) return FALSE;
+    if(kInternalReadClusterWithoutCache(dwOffset, pbBuffer) == FALSE) return FALSE;
     pstCacheBuffer = kAllocateCacheBufferWithFlush(CACHE_DATAAREA);
     if(pstCacheBuffer == NULL) return FALSE;
     kMemCpy(pstCacheBuffer->pbBuffer, pbBuffer, FILESYSTEM_CLUSTERSIZE);
